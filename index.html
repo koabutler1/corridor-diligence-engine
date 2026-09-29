@@ -1,0 +1,1805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Corridor Diligence Engine</title>
+<style>
+  :root{--ink:#1F3A5F;--plat:#5A6675;--yellow:#F2C14E;--steel:#4F7694;--accent:#2E86AB;--lgray:#E3E2E6;--tint:#DCE7F2;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;color:var(--plat);background:#fff;line-height:1.55;max-width:1040px;margin:0 auto;padding:36px 28px 64px;}
+  .masthead{border-bottom:2px solid var(--ink);padding-bottom:14px;margin-bottom:22px;}
+  .eyebrow{font-size:11px;letter-spacing:.18em;font-weight:700;color:var(--ink);}
+  h1{color:var(--ink);font-size:30px;font-weight:700;margin-top:2px;}
+  .sub{font-size:14px;}
+  h2{color:var(--ink);font-size:17px;font-weight:700;margin:26px 0 10px;}
+  .panel{border:1px solid var(--lgray);border-radius:8px;padding:18px 20px;margin-top:14px;}
+  .drop{border:2px dashed var(--lgray);border-radius:8px;padding:26px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;font-size:14px;}
+  .drop.hover{border-color:var(--ink);background:var(--tint);}
+  .drop strong{color:var(--ink);}
+  .row{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-top:12px;}
+  label{font-size:12px;font-weight:600;display:block;margin-bottom:4px;}
+  input[type=text]{border:1px solid var(--lgray);border-radius:6px;padding:8px 10px;font:inherit;color:var(--plat);width:150px;}
+  input[type=text]:focus{outline:2px solid var(--ink);border-color:var(--ink);}
+  button{font:inherit;font-weight:600;border-radius:6px;padding:9px 16px;cursor:pointer;border:1px solid var(--ink);background:#fff;color:var(--ink);}
+  button:hover{background:var(--tint);}
+  button.primary{background:var(--ink);color:#fff;}
+  button.primary:hover{background:#2a5c30;}
+  .toggle{display:inline-flex;border:1px solid var(--ink);border-radius:6px;overflow:hidden;}
+  .toggle button{border:none;border-radius:0;padding:8px 18px;}
+  .toggle button.on{background:var(--ink);color:#fff;}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:12px;}
+  .card{border:1px solid var(--lgray);border-radius:8px;padding:14px 16px;cursor:pointer;transition:border-color .15s;}
+  .card:hover{border-color:var(--ink);}
+  .card .k{font-size:12px;font-weight:600;}
+  .card .v{font-size:26px;font-weight:700;color:var(--ink);margin-top:2px;}
+  .card .u{font-size:12px;font-weight:400;}
+  .card .why{font-size:11px;color:var(--steel);margin-top:6px;}
+  .audit{display:none;margin-top:10px;background:#F7F8F6;border-left:3px solid var(--ink);padding:10px 12px;font-size:12px;white-space:pre-wrap;font-family:Consolas,monospace;}
+  .card.open .audit{display:block;}
+  .flag{display:inline-block;font-size:12px;font-weight:700;border-radius:999px;padding:3px 12px;}
+  .flag.tight{background:var(--tint);color:var(--ink);}
+  .flag.balanced{background:var(--yellow);color:#5a4a00;}
+  .flag.loose{background:#F6D9CB;color:#7a2f10;}
+  .flag.na{background:var(--lgray);color:var(--plat);}
+  .verdict{border-left:4px solid var(--ink);padding:14px 18px;background:#F7F8F6;margin-top:12px;}
+  .verdict .big{font-size:16px;font-weight:700;color:var(--ink);}
+  .narrative{font-size:14px;border:1px solid var(--lgray);border-radius:8px;padding:16px 18px;margin-top:12px;}
+  .note{font-size:12px;color:var(--steel);margin-top:8px;}
+  .err{background:#FCF1EC;border-left:3px solid #B4531F;color:#7a2f10;padding:12px 14px;font-size:13px;white-space:pre-wrap;margin-top:12px;display:none;}
+  .maprow{display:grid;grid-template-columns:200px 1fr;gap:8px;align-items:center;font-size:13px;margin-top:6px;}
+  select{font:inherit;color:var(--plat);border:1px solid var(--lgray);border-radius:6px;padding:6px 8px;}
+  #results{display:none;}
+  details.pull{border:1px solid var(--lgray);border-radius:8px;padding:0;margin-top:14px;}
+  details.pull summary{cursor:pointer;padding:12px 16px;font-weight:700;color:var(--ink);font-size:14px;list-style:none;}
+  details.pull summary::before{content:"\25B8  ";}
+  details.pull[open] summary::before{content:"\25BE  ";}
+  details.pull .inner{padding:0 18px 14px;font-size:13px;}
+  details.pull code{background:#F1F2F0;border-radius:4px;padding:1px 5px;font-size:12px;}
+  .step{border:1px solid var(--lgray);border-left:4px solid var(--ink);border-radius:8px;padding:16px 20px;margin-top:18px;}
+  .step .steplabel{font-size:11px;letter-spacing:.14em;font-weight:700;color:var(--ink);margin-bottom:2px;}
+  .step h2{margin-top:2px;}
+  select.big{min-width:260px;padding:8px 10px;}
+  .exports .row button{padding:11px 18px;}
+  .card{transition:box-shadow .15s, transform .15s;}
+  .card:hover{box-shadow:0 4px 14px rgba(29,67,33,.12);transform:translateY(-1px);}
+  .card .v{font-variant-numeric:tabular-nums;}
+  .panel{box-shadow:0 1px 3px rgba(90,102,117,.06);}
+  #smSearch{border:1px solid var(--lgray);border-radius:6px;padding:7px 10px;font:inherit;color:var(--plat);width:260px;margin-top:8px;}
+  .smgrid{max-height:220px;overflow-y:auto;padding:6px 2px;}
+  footer{margin-top:40px;border-top:1px solid var(--lgray);padding-top:14px;font-size:12px;color:var(--steel);}
+  .ai-badge{display:inline-block;background:var(--yellow);color:#5a4a00;font-size:10px;font-weight:700;border-radius:999px;padding:2px 9px;vertical-align:middle;margin-left:8px;letter-spacing:.05em;}
+  .det-badge{display:inline-block;background:var(--tint);color:var(--ink);font-size:10px;font-weight:700;border-radius:999px;padding:2px 9px;vertical-align:middle;margin-left:8px;letter-spacing:.05em;}
+  table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px;}
+  th{text-align:left;color:var(--ink);border-bottom:2px solid var(--ink);padding:6px 8px;font-size:12px;}
+  td{border-bottom:1px solid var(--lgray);padding:7px 8px;vertical-align:top;}
+  .rflag{display:inline-block;font-size:11px;font-weight:700;border-radius:999px;padding:2px 10px;}
+  .rflag.match{background:var(--tint);color:var(--ink);}
+  .rflag.div{background:#F6D9CB;color:#7a2f10;}
+  .rflag.noeng{background:var(--lgray);color:var(--plat);}
+  .quote{font-size:12px;color:var(--steel);font-style:italic;}
+  textarea{width:100%;min-height:110px;border:1px solid var(--lgray);border-radius:8px;padding:10px 12px;font:inherit;font-size:13px;color:var(--plat);resize:vertical;}
+  .pill{display:inline-block;background:var(--tint);color:var(--ink);font-size:11px;font-weight:700;border-radius:999px;padding:2px 10px;margin-left:8px;vertical-align:middle;}
+  .smgrid{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;}
+  .smgrid label{font-weight:400;font-size:13px;display:flex;align-items:center;gap:6px;margin:0;}
+</style>
+</head>
+<body>
+<noscript style="display:block;background:#FCF1EC;border-left:3px solid #B4531F;color:#7a2f10;padding:12px 16px;font-size:14px;">This tool needs JavaScript. Open the file in Microsoft Edge or Chrome with JavaScript enabled.</noscript>
+
+<div class="masthead">
+  <div class="eyebrow">INDUSTRIAL REAL ESTATE&nbsp;&nbsp;|&nbsp;&nbsp;MARKET SCREEN</div>
+  <h1>Corridor Diligence Engine <span class="pill">v3.5</span></h1>
+  <div class="sub">One market-data export in &middot; corridors cut by selection &middot; baseline computed from the series &middot; numbers computed server-side by the canonical Python engine</div>
+</div>
+
+<div class="row" style="margin:14px 0 0; gap:0;">
+  <div class="toggle" role="tablist" aria-label="View">
+    <button id="tabScreen" class="on" type="button">Screen</button>
+    <button id="tabMethod" type="button">Methodology</button>
+  </div>
+</div>
+
+<div id="methodView" style="display:none;">
+  <h2>Methodology — every number, its arithmetic</h2>
+  <div class="sub">This page is the tool's contract: each metric's exact formula, aggregation rule, and refusal condition. Nothing on the Screen is computed any other way. Definitions marked <em>definitional</em> are implemented as stated but pending team confirmation before the screen is treated as a standard.</div>
+
+  <div class="panel">
+    <strong style="color:var(--ink);">Data handling before any metric</strong>
+    <div style="font-size:13px; margin-top:8px; line-height:1.7;">
+      <b>Grain.</b> One row per geography per quarter from a market-data export (.csv or .xlsx, read natively).<br>
+      <b>Forecast cap.</b> Base Case exports include forecast quarters. If an <code>As Of</code> column is present, only actuals are screened: periods ≤ (As Of − 1 quarter). The cap is shown in the corridor builder.<br>
+      <b>Corridor.</b> A corridor is a named <em>selection of markets</em> — checkboxes, a catalog default, or (deployed app) an AI proposal validated against the file's own market list and confirmed by the analyst. Membership is <em>definitional</em>.<br>
+      <b>Number parsing.</b> "$", ",", "%", and whitespace are stripped; rates greater than 1 are treated as percentages (7.9 → 0.079) when converting to SF.<br>
+      <b>Refusal rule.</b> Any metric whose inputs are missing renders "—" with a reason — the tool refuses rather than guesses.
+    </div>
+  </div>
+
+  <div class="panel">
+    <strong style="color:var(--ink);">The core five</strong>
+    <table>
+      <tr><th style="width:22%;">Metric</th><th style="width:44%;">Formula</th><th>Notes</th></tr>
+      <tr><td>Months of supply</td><td>Total vacant SF ÷ monthly absorption baseline</td><td>Vacant SF = Σ Vacant SF if present, else Σ (Inventory SF × Vacancy Rate). Baseline below. <em>Definitional:</em> total-vacant ÷ pre-COVID <em>net</em> absorption is structurally large on 2026 conditions (~50–60 months); review the definition before treating levels as comparable.</td></tr>
+      <tr><td>Absorption baseline</td><td>average quarterly Σ Net Absorption SF over the window, ÷ 3</td><td>Window editable in the corridor builder; default 2015 Q1 – 2019 Q4 (<em>definitional</em>). Quarters with no rows are excluded from the average.</td></tr>
+      <tr><td>Forward months of supply</td><td>Σ Under Construction SF (latest actual) ÷ monthly baseline</td><td>Pipeline sized at the baseline demand pace; not a delivery-timing forecast.</td></tr>
+      <tr><td>Overall vacancy</td><td>Σ vacant SF ÷ Σ Inventory SF, latest actual quarter</td><td>Corridor aggregate, not an average of market rates.</td></tr>
+      <tr><td>Vacancy A / B</td><td>inventory-weighted average of class-slice vacancy rates</td><td>Requires class/star-slice columns in the export; refuses otherwise.</td></tr>
+      <tr><td>Rent growth (yoy)</td><td>(Wₗ − Wₚ) ÷ Wₚ where W = Σ(rent × inventory) ÷ Σ inventory</td><td>Wₗ = latest actual quarter; Wₚ = four quarters prior. Refuses if either endpoint lacks rent rows.</td></tr>
+    </table>
+  </div>
+
+  <div class="panel">
+    <strong style="color:var(--ink);">Optional KPIs (picker)</strong>
+    <table>
+      <tr><th style="width:28%;">KPI</th><th>Aggregation</th></tr>
+      <tr><td>Availability Rate</td><td>inventory-weighted average, latest actual quarter</td></tr>
+      <tr><td>Occupancy Rate</td><td>inventory-weighted average, latest actual quarter</td></tr>
+      <tr><td>Net Absorption (12 Mo)</td><td>sum across selected markets (column is already trailing-12-month)</td></tr>
+      <tr><td>Construction Starts (12 Mo)</td><td>sum across selected markets (trailing-12-month column)</td></tr>
+      <tr><td>Deliveries (trailing 4Q)</td><td>sum of quarterly Gross Delivered SF over the last four actual quarters</td></tr>
+      <tr><td>Reported Rent Growth (12 Mo)</td><td>inventory-weighted average of the data provider's precomputed figure — a deliberate cross-check against the tool's computed rent growth</td></tr>
+      <tr><td>Cap Rate</td><td>transaction-weighted average using Cap Rate Transactions as weights; n disclosed; <b>refuses when n = 0</b> (thin-market discipline)</td></tr>
+    </table>
+    <div class="note">Optionals are computed in-browser from the same rows and carry click-open audit trails identical to the core metrics.</div>
+  </div>
+
+  <div class="panel">
+    <strong style="color:var(--ink);">Claims Reconciler — where AI does and does not operate</strong>
+    <div style="font-size:13px; margin-top:8px; line-height:1.7;">
+      The model performs <b>extraction only</b>: it reads broker prose and returns structured claims (metric, value, quote). The <b>verdict is arithmetic</b>: |claim − engine value| compared to fixed thresholds — vacancy 1.0pp, rent growth 2.0pp, months of supply 2.0, institutional ownership 5.0pp (<em>definitional</em>). A claim about a metric the engine does not compute returns NO_ENGINE_VALUE rather than a judgment. The narrative generator drafts prose from computed figures only and is labeled for analyst review; the model never computes or adjusts a metric anywhere in this tool.
+    </div>
+  </div>
+
+  <div class="panel">
+    <strong style="color:var(--ink);">Excess-vacancy model — months of supply</strong>
+    <div style="font-size:13px; margin-top:8px; line-height:1.7;">
+      A standard equilibrium-vacancy approach, computed per market: <b>equilibrium vacancy</b> = the market’s average vacancy rate over the baseline window; <b>excess vacant SF</b> = max(0, current rate − equilibrium) × inventory; <b>excess-vacancy months of supply</b> = (excess SF + under-construction SF) ÷ the window’s monthly absorption pace. The split matters: pipeline months burn off on a delivery schedule, standing-vacancy months clear only on demand’s. <em>Definitional</em>, like the simple metric it complements.
+    </div>
+  </div>
+
+  <div class="panel">
+    <strong style="color:var(--ink);">National benchmarking &amp; verdict flags</strong>
+    <div style="font-size:13px; margin-top:8px; line-height:1.7;">
+      When the loaded file contains many markets, the tool computes months of supply for every market (same formula, same window, same as-of) and reports the corridor's percentile — the share of markets with a lower value; higher percentile = looser. Verdict flags then become distribution-based: TIGHT = bottom quartile, LOOSE = top quartile of the file's markets, replacing the absolute 9/15 cutoffs (which remain the fallback for small files). The time-replay chart applies the fixed baseline to each quarter's vacant stock — a replay against the era's normal demand, not a per-quarter re-estimate. <em>Definitional</em>, like the rest.
+    </div>
+  </div>
+
+  <div class="panel">
+    <strong style="color:var(--ink);">Verification</strong>
+    <div style="font-size:13px; margin-top:8px; line-height:1.7;">
+      Formulas were checked during development with unit tests against hand-computed expectations and parity checks between the JavaScript and Python implementations.
+    </div>
+  </div>
+</div>
+
+
+<h2>1&nbsp;&nbsp;Load a market-data export</h2>
+<div class="sub">Submarket-level time series: one row per submarket per quarter, with inventory, vacancy, net absorption, asking rent, and under-construction SF.</div>
+<div class="drop" id="drop" style="cursor:default;">
+  <strong style="color:var(--ink);">Demonstration build — synthetic data only.</strong>
+  <button class="primary" id="sampleBtn" type="button" style="margin-left:10px;">Load synthetic national dataset</button>
+  <div class="note" style="margin-top:8px;">Uploads are disabled in this deployment by construction; the public build runs on the synthetic sample only.</div>
+  <input type="file" id="file" accept=".csv" style="display:none">
+</div>
+<div class="err" id="err"></div>
+
+<div class="panel" id="mapPanel" style="display:none;">
+  <strong style="color:var(--ink);font-size:14px;">Column mapping</strong>
+  <div class="note">Auto-resolved from the export headers. Override if a guess is wrong, then apply.</div>
+  <div id="maps"></div>
+  <div class="row"><button class="primary" id="applyMap" type="button">Apply mapping</button></div>
+</div>
+
+<div class="panel" id="corrPanel" style="display:none;">
+  <strong style="color:var(--ink);font-size:14px;">Corridor builder</strong>
+  <div class="note">A corridor is a saved selection of submarkets — check the ones that make it up, name it, screen it. Same file, different selection = different corridor.</div>
+  <div class="row" style="margin-top:4px;">
+    <div><label for="catalog">Corridor catalog (definitional defaults — edit freely)</label>
+      <select id="catalog" class="big"><option value="">— choose a corridor —</option></select></div>
+    <button id="applyCatalog" type="button">Apply catalog selection</button>
+    <button id="selNone" type="button">Select none</button>
+    <button id="selAll" type="button">Select all</button>
+    <button id="aiMapBtn" type="button">AI: map corridor to markets <span class="ai-badge">AI PROPOSES</span></button>
+    <span class="note" id="mapStatus"></span>
+  </div>
+  <input type="text" id="smSearch" placeholder="Search markets…">
+  <div class="smgrid" id="smChecks"></div>
+  <div class="row">
+    <div><label for="corrName">Corridor name</label><input type="text" id="corrName" style="width:260px;" placeholder="e.g. I-81 Distribution"></div>
+    <div><label for="winStart">Baseline window start</label><input type="text" id="winStart" value="2015 Q1"></div>
+    <div><label for="winEnd">Baseline window end</label><input type="text" id="winEnd" value="2019 Q4"></div>
+    <button class="primary" id="screenCorr" type="button">Screen corridor</button>
+    <div class="toggle" role="group" aria-label="Output mode">
+      <button id="modeR" class="on" type="button">Research</button>
+      <button id="modeA" type="button">Acquisitions</button>
+    </div>
+  </div>
+  <div class="note">The pre-COVID absorption baseline is computed from the series inside this window — a definitional judgment call; adjust it to your own view.</div>
+</div>
+
+<div class="panel" id="kpiPanel">
+  <strong style="color:var(--ink);font-size:14px;">KPI picker</strong>
+  <div class="note">Choose the optional metrics for this screen and its exports. Availability of each depends on the columns in your export.</div>
+  <div class="smgrid" id="kpiChecks" style="row-gap:6px;"></div>
+</div>
+
+<div id="results">
+  <h2 id="corrTitle">2&nbsp;&nbsp;Corridor screen</h2>
+  <div class="err" id="winWarn" style="display:none;background:#FDF6E3;border-left:3px solid #F2C14E;color:#5a4a00;"></div>
+  <div class="note" style="margin-top:0;"><span class="det-badge">DETERMINISTIC — NO AI</span> every metric is arithmetic computed by the Python engine; click a card for its inputs.</div>
+  <div id="acqVerdict" class="verdict" style="display:none;"></div>
+  <div class="cards" id="cards"></div>
+  <div class="note">Click any metric for its arithmetic and inputs — every number traces to series rows. Institutional ownership is a property-level metric and is not computable from market data; it requires a targeted property pull for the chosen corridor (or the Phase 2 database).</div>
+  <h2>Narrative <span style="font-weight:400;font-size:13px;">(draft — template-generated from the deterministic results)</span></h2>
+  <div class="narrative" id="narrative">—</div>
+  <div class="row">
+    <button id="aiNarrBtn" type="button">Draft with AI <span class="ai-badge">AI</span></button>
+    <span class="note" id="aiNarrStatus"></span>
+  </div>
+
+  <h2>Claims Reconciler <span class="ai-badge">AI EXTRACTS</span> <span class="det-badge">CODE DECIDES</span></h2>
+  <div class="sub">Paste a broker market-report excerpt. The model extracts the quantitative claims; deterministic thresholds compare each to the engine's numbers and flag divergence. The model never judges a claim — arithmetic does.</div>
+  <textarea id="brokerText" placeholder="Paste broker report text here… (demo: use the sample excerpt — real broker reports are licensed content; confirm data policy before pasting them into any external service)"></textarea>
+  <div class="row">
+    <button class="primary" id="reconBtn" type="button">Extract &amp; reconcile</button>
+    <button id="sampleBrokerBtn" type="button">Load sample excerpt</button>
+    <span class="note" id="reconStatus"></span>
+  </div>
+  <div id="reconOut"></div>
+  <h2>Corridor charts <span style="font-weight:400;font-size:13px;">(redraw with every screen)</span></h2>
+  <div class="row" id="liveCharts" style="align-items:flex-start;">
+    <div style="flex:1;min-width:300px;">
+      <canvas id="cvVac" width="900" height="560" style="width:100%;border:1px solid var(--lgray);border-radius:8px;"></canvas>
+      <div class="row" style="margin-top:6px;"><button type="button" class="dlChart" data-cv="cvVac" data-name="vacancy">Download PNG</button></div>
+    </div>
+    <div style="flex:1;min-width:300px;">
+      <canvas id="cvAbs" width="900" height="560" style="width:100%;border:1px solid var(--lgray);border-radius:8px;"></canvas>
+      <div class="row" style="margin-top:6px;"><button type="button" class="dlChart" data-cv="cvAbs" data-name="net_absorption">Download PNG</button></div>
+    </div>
+    <div style="flex:0 0 220px;">
+      <canvas id="cvMos" width="440" height="560" style="width:100%;border:1px solid var(--lgray);border-radius:8px;"></canvas>
+      <div class="row" style="margin-top:6px;"><button type="button" class="dlChart" data-cv="cvMos" data-name="months_of_supply">Download PNG</button></div>
+    </div>
+  </div>
+  <div class="note" id="chartsNote"></div>
+
+  <div class="panel" id="comparePanel">
+    <div class="row" style="align-items:center;">
+      <strong style="color:var(--ink);font-size:14px;">Compare corridors</strong>
+      <button id="pinBtn" type="button">Pin this screen as Corridor A</button>
+      <span class="note">Pin one screen, then select and screen another — the delta table appears here.</span>
+    </div>
+    <div id="compareOut"></div>
+  </div>
+
+  <div class="panel" id="xvPanel" style="display:none;">
+    <strong style="color:var(--ink);font-size:14px;">Excess-vacancy model · months of supply <span class="det-badge" style="display:inline-block;background:var(--tint);color:var(--ink);font-size:10px;font-weight:700;border-radius:999px;padding:2px 9px;vertical-align:middle;margin-left:8px;">DETERMINISTIC</span></strong>
+    <div class="note">Excess vacancy above each market’s window-average equilibrium, plus the pipeline, over the window’s absorption pace, per market. Composition matters: pipeline months burn off on a schedule; standing vacancy needs demand.</div>
+    <div id="xvHead" style="margin-top:8px;font-size:14px;"></div>
+    <canvas id="cvXv" width="1200" height="520" style="width:100%;margin-top:8px;border:1px solid var(--lgray);border-radius:8px;"></canvas>
+    <div id="xvTable"></div>
+    <div class="note">Source: sample market data; excess-vacancy model. Equilibrium vacancy = each market’s window average; demand denominator = window absorption pace.</div>
+  </div>
+
+  <div class="panel" id="scrubWrap" style="display:none;">
+    <strong style="color:var(--ink);font-size:14px;">Replay the corridor through time</strong>
+    <canvas id="cvMosT" width="1200" height="480" style="width:100%;margin-top:8px;border:1px solid var(--lgray);border-radius:8px;"></canvas>
+    <div class="row" style="align-items:center;">
+      <input type="range" id="scrub" min="0" max="1" value="1" style="flex:1;">
+    </div>
+    <div id="scrubOut" style="font-size:14px;"></div>
+    <div class="note">Historical months of supply uses the same fixed baseline — a replay of the stock against the era's normal demand, not a re-estimate of each quarter's own pace.</div>
+  </div>
+
+  <h2>Exports</h2>
+  <div class="sub">Deliverables generated from the current screen: deterministic figures fill the charts and the model; the model drafts slide copy from those figures only.</div>
+  <div class="row exports">
+    <button class="primary" id="pagerBtn" type="button">Export one-pager (PDF via print)</button>
+    <button id="deckBtn" type="button">Export slide deck (.pptx)</button>
+    <button class="primary" id="xlsBtn" type="button">Export Excel model (.xlsx)</button>
+    <span class="note" id="expStatus"></span>
+  </div>
+  <div class="note">The Excel workbook carries the data, the assumptions, and a live months-of-supply formula, plus chart-ready tables — native embedded charts are generated in the deck (a client-side Excel limitation, noted in the workbook's ReadMe).</div>
+</div>
+
+<h2>Corridor Chat <span class="ai-badge" style="display:inline-block;background:var(--yellow);color:#5a4a00;font-size:10px;font-weight:700;border-radius:999px;padding:2px 9px;vertical-align:middle;">MODEL-GENERATED</span></h2>
+<div class="sub">Ask about the screen, the methodology, or paste a broker claim to sanity-check it. Answers draw only on the engine’s computed facts and any reconciled claims — the model never computes a number. For code-adjudicated verdicts, use the Reconciler above.</div>
+<div class="panel" id="chatPanel">
+  <div id="chatLog" style="max-height:340px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:4px 2px;"></div>
+  <div class="row" style="margin-top:10px;align-items:flex-start;">
+    <textarea id="chatIn" rows="2" placeholder="e.g. Why is Charlotte’s excess-vacancy number higher than Atlanta’s?  ·  A broker says vacancy is 5.5% — does that hold?" style="flex:1;padding:10px 12px;font:inherit;color:var(--plat);border:1px solid var(--lgray);border-radius:8px;resize:vertical;"></textarea>
+    <button class="primary" id="chatSend" type="button">Send</button>
+  </div>
+  <div class="note" id="chatStatus"></div>
+</div>
+
+
+<footer>
+  Deterministic by design: every metric is arithmetic computed locally from the export; no AI touches a number. Metric definitions (baseline window; class slices) are judgment calls; review them before relying on the screen. Includes no licensed or proprietary market data.
+</footer>
+
+<script>
+/* ===== OFFICE LIB (self-contained; no network) =====
+   xlsx/pptx are zip archives of XML. This implements:
+   - zipStore(): STORED (uncompressed) zip writer with CRC32
+   - unzipRead(): reader using native DecompressionStream('deflate-raw')
+   - readXlsxToCsv(): market-data .xlsx -> CSV text (sharedStrings + inlineStr aware)
+   - writeXlsx(): sheets of arrays; {f:"..."} cells become live formulas
+   - writePptx(): minimal valid deck (master/layout/theme) with text + PNG images
+   - chartPNG(): canvas-rendered bar/line charts for slide images
+*/
+const OfficeLib = (() => {
+  // ---- CRC32 ----
+  const CRC_T = (() => { const t = new Uint32Array(256);
+    for (let n = 0; n < 256; n++) { let c = n;
+      for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+      t[n] = c >>> 0; } return t; })();
+  const crc32 = (u8) => { let c = 0xFFFFFFFF;
+    for (let i = 0; i < u8.length; i++) c = CRC_T[(c ^ u8[i]) & 0xFF] ^ (c >>> 8);
+    return (c ^ 0xFFFFFFFF) >>> 0; };
+  const enc = new TextEncoder();
+  const xml = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+  // ---- zip writer (STORED) ----
+  function zipStore(files) { // files: [{name, data: Uint8Array|string}]
+    const parts = [], central = []; let off = 0;
+    const dosTime = 0x6000, dosDate = 0x5A21; // fixed timestamp
+    for (const f of files) {
+      const data = typeof f.data === "string" ? enc.encode(f.data) : f.data;
+      const name = enc.encode(f.name), crc = crc32(data);
+      const lh = new DataView(new ArrayBuffer(30));
+      lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true);
+      lh.setUint16(6, 0, true); lh.setUint16(8, 0, true);
+      lh.setUint16(10, dosTime, true); lh.setUint16(12, dosDate, true);
+      lh.setUint32(14, crc, true); lh.setUint32(18, data.length, true);
+      lh.setUint32(22, data.length, true); lh.setUint16(26, name.length, true);
+      lh.setUint16(28, 0, true);
+      parts.push(new Uint8Array(lh.buffer), name, data);
+      const ch = new DataView(new ArrayBuffer(46));
+      ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true);
+      ch.setUint16(8, 0, true); ch.setUint16(10, 0, true);
+      ch.setUint16(12, dosTime, true); ch.setUint16(14, dosDate, true);
+      ch.setUint32(16, crc, true); ch.setUint32(20, data.length, true);
+      ch.setUint32(24, data.length, true); ch.setUint16(28, name.length, true);
+      ch.setUint32(42, off, true);
+      central.push(new Uint8Array(ch.buffer), name);
+      off += 30 + name.length + data.length;
+    }
+    let cdSize = 0; central.forEach(u => cdSize += u.length);
+    const eocd = new DataView(new ArrayBuffer(22));
+    eocd.setUint32(0, 0x06054b50, true);
+    eocd.setUint16(8, files.length, true); eocd.setUint16(10, files.length, true);
+    eocd.setUint32(12, cdSize, true); eocd.setUint32(16, off, true);
+    const blobParts = parts.concat(central, [new Uint8Array(eocd.buffer)]);
+    return new Blob(blobParts, { type: "application/zip" });
+  }
+
+  // ---- zip reader (deflate via native stream) ----
+  async function unzipRead(buf) { // -> Map(name -> Uint8Array)
+    const u8 = new Uint8Array(buf), dv = new DataView(buf);
+    // find EOCD
+    let e = u8.length - 22;
+    while (e >= 0 && dv.getUint32(e, true) !== 0x06054b50) e--;
+    if (e < 0) throw new Error("not a zip");
+    const count = dv.getUint16(e + 10, true); let p = dv.getUint32(e + 16, true);
+    const out = new Map();
+    for (let i = 0; i < count; i++) {
+      if (dv.getUint32(p, true) !== 0x02014b50) throw new Error("bad central dir");
+      const method = dv.getUint16(p + 10, true), csize = dv.getUint32(p + 20, true);
+      const nlen = dv.getUint16(p + 28, true), elen = dv.getUint16(p + 30, true),
+            clen = dv.getUint16(p + 32, true), lho = dv.getUint32(p + 42, true);
+      const name = new TextDecoder().decode(u8.subarray(p + 46, p + 46 + nlen));
+      const lnlen = dv.getUint16(lho + 26, true), lelen = dv.getUint16(lho + 28, true);
+      const start = lho + 30 + lnlen + lelen;
+      const raw = u8.subarray(start, start + csize);
+      if (method === 0) out.set(name, raw.slice());
+      else if (method === 8) {
+        const ds = new DecompressionStream("deflate-raw");
+        const stream = new Blob([raw]).stream().pipeThrough(ds);
+        out.set(name, new Uint8Array(await new Response(stream).arrayBuffer()));
+      } else throw new Error("unsupported compression " + method);
+      p += 46 + nlen + elen + clen;
+    }
+    return out;
+  }
+
+  // ---- xlsx -> CSV (first worksheet; prefix-tolerant, DOM-free scan) ----
+  const unesc = (s) => s.replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"')
+    .replace(/&apos;/g,"'").replace(/&#(\d+);/g,(_,n)=>String.fromCharCode(+n)).replace(/&amp;/g,"&");
+  async function readXlsxToCsv(arrayBuffer) {
+    const files = await unzipRead(arrayBuffer);
+    const dec = new TextDecoder();
+    const txt = (n) => { const u = files.get(n); return u ? dec.decode(u) : null; };
+    // shared strings (regex; prefix-tolerant)
+    let shared = [];
+    const ss = txt("xl/sharedStrings.xml");
+    if (ss) for (const m of ss.matchAll(/<(?:\w+:)?si(?:\s[^>]*)?>([\s\S]*?)<\/(?:\w+:)?si>/g)) {
+      let out = "";
+      for (const t of m[1].matchAll(/<(?:\w+:)?t(?:\s[^>]*)?>([\s\S]*?)<\/(?:\w+:)?t>/g)) out += unesc(t[1]);
+      if (out === "" && /<(?:\w+:)?t(?:\s[^>]*)?\/>/.test(m[1])) out = "";
+      shared.push(out);
+    }
+    // first sheet target via workbook + rels (regex)
+    const wb = txt("xl/workbook.xml") || "";
+    const sheetTag = wb.match(/<(?:\w+:)?sheet\s[^>]*>/);
+    if (!sheetTag) throw new Error("no worksheet found in workbook.xml");
+    const rid = (sheetTag[0].match(/r:id="([^"]+)"/) || [])[1];
+    let target = "worksheets/sheet1.xml";
+    const rels = txt("xl/_rels/workbook.xml.rels") || "";
+    if (rid) for (const r of rels.matchAll(/<Relationship\s[^>]*>/g)) {
+      if (r[0].includes('Id="' + rid + '"')) { target = (r[0].match(/Target="([^"]+)"/) || [,target])[1]; break; }
+    }
+    target = target.replace(/^\//, "").replace(/^xl\//, "");
+    const sheet = txt("xl/" + target);
+    if (!sheet) throw new Error("worksheet part missing: " + target);
+    const colOf = (ref) => { let c = 0;
+      for (const ch of ref) { if (ch >= "A" && ch <= "Z") c = c * 26 + (ch.charCodeAt(0) - 64); else break; }
+      return c - 1; };
+    const rows = [];
+    for (const rm of sheet.matchAll(/<(?:\w+:)?row\b[^>]*>([\s\S]*?)<\/(?:\w+:)?row>/g)) {
+      const arr = [];
+      for (const cm of rm[1].matchAll(/<(?:\w+:)?c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/(?:\w+:)?c>)/g)) {
+        const attrs = cm[1], body = cm[2] || "";
+        const ref = (attrs.match(/\br="([A-Z]+\d+)"/) || [])[1]; if (!ref) continue;
+        const t = (attrs.match(/\bt="([^"]+)"/) || [])[1];
+        let val = "";
+        const v = body.match(/<(?:\w+:)?v(?:\s[^>]*)?>([\s\S]*?)<\/(?:\w+:)?v>/);
+        if (t === "s" && v) val = shared[+v[1]] ?? "";
+        else if (t === "inlineStr") { const is = body.match(/<(?:\w+:)?t(?:\s[^>]*)?>([\s\S]*?)<\/(?:\w+:)?t>/); val = is ? unesc(is[1]) : ""; }
+        else if (v) val = unesc(v[1]);
+        arr[colOf(ref)] = val;
+      }
+      rows.push(arr);
+    }
+    if (!rows.length) throw new Error("worksheet has no rows");
+    const escape = (v) => { v = String(v ?? "");
+      return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+    const width = Math.max(...rows.map(r => r.length));
+    return rows.map(r => Array.from({ length: width }, (_, i) => escape(r[i])).join(",")).join("\n");
+  }
+
+  // ---- xlsx writer ----
+  function colName(i) { let s = ""; i++; while (i) { s = String.fromCharCode(65 + (i - 1) % 26) + s; i = Math.floor((i - 1) / 26); } return s; }
+  function writeXlsx(sheets) { // [{name, rows:[[cell...]]}] cell: string|number|{f}|null
+    const files = [];
+    const sheetXml = (rows) => {
+      let out = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>';
+      rows.forEach((row, ri) => {
+        out += `<row r="${ri + 1}">`;
+        row.forEach((cell, ci) => {
+          if (cell === null || cell === undefined || cell === "") return;
+          const ref = colName(ci) + (ri + 1);
+          if (typeof cell === "object" && cell.f)
+            out += `<c r="${ref}"><f>${xml(cell.f)}</f></c>`;
+          else if (typeof cell === "number" && isFinite(cell))
+            out += `<c r="${ref}"><v>${cell}</v></c>`;
+          else
+            out += `<c r="${ref}" t="inlineStr"><is><t xml:space="preserve">${xml(cell)}</t></is></c>`;
+        });
+        out += "</row>";
+      });
+      return out + "</sheetData></worksheet>";
+    };
+    const names = sheets.map((s, i) => ({ n: s.name.replace(/[\\\/\?\*\[\]:]/g, " ").slice(0, 31) || ("Sheet" + (i + 1)), i }));
+    files.push({ name: "[Content_Types].xml", data:
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>' +
+      names.map(s => `<Override PartName="/xl/worksheets/sheet${s.i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join("") + "</Types>" });
+    files.push({ name: "_rels/.rels", data:
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>' });
+    files.push({ name: "xl/workbook.xml", data:
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>' +
+      names.map(s => `<sheet name="${xml(s.n)}" sheetId="${s.i + 1}" r:id="rId${s.i + 1}"/>`).join("") + "</sheets></workbook>" });
+    files.push({ name: "xl/_rels/workbook.xml.rels", data:
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+      names.map(s => `<Relationship Id="rId${s.i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${s.i + 1}.xml"/>`).join("") + "</Relationships>" });
+    sheets.forEach((s, i) => files.push({ name: `xl/worksheets/sheet${i + 1}.xml`, data: sheetXml(s.rows) }));
+    return zipStore(files);
+  }
+
+  // ---- canvas charts: shared drawing core (on-screen + exports) ----
+  function drawChart(cv, kind, labels, series, opts) { // series:[{name,values,color}]
+    const W = cv.width, H = cv.height, pad = { l: 70, r: 20, t: 34, b: 70 };
+    const g = cv.getContext("2d");
+    g.clearRect(0, 0, W, H);
+    g.fillStyle = "#FFFFFF"; g.fillRect(0, 0, W, H);
+    const all = series.flatMap(s => s.values).filter(v => v != null && isFinite(v));
+    let max = Math.max(...all, 0), min = Math.min(...all, 0);
+    if (max === min) max = min + 1;
+    const px = (v) => pad.t + (H - pad.t - pad.b) * (1 - (v - min) / (max - min));
+    const plotW = W - pad.l - pad.r;
+    g.strokeStyle = "#E3E2E6"; g.fillStyle = "#5A6675";
+    g.font = "16px Arial"; g.textAlign = "right";
+    for (let i = 0; i <= 4; i++) {
+      const v = min + (max - min) * i / 4, y = px(v);
+      g.beginPath(); g.moveTo(pad.l, y); g.lineTo(W - pad.r, y); g.stroke();
+      g.fillText(Math.abs(v) >= 1000 ? Math.round(v).toLocaleString() : (Math.round(v * 10) / 10), pad.l - 8, y + 5);
+    }
+    g.textAlign = "center"; g.font = "14px Arial";
+    const n = labels.length, tickEvery = Math.max(1, Math.ceil(n / 12));
+    if (opts.title) { g.font = "bold 18px Arial"; g.fillStyle = "#1F3A5F"; g.fillText(opts.title, W / 2, 22); g.font = "14px Arial"; g.fillStyle = "#5A6675"; }
+    if (kind === "combo") {
+      const groups = n, bw = plotW / groups * 0.62 / series.length;
+      labels.forEach((lab, i) => {
+        series.forEach((s, si) => {
+          const v = s.values[i]; if (v == null) return;
+          const x = pad.l + plotW * (i + 0.19) / groups + si * bw;
+          const y0 = px(0), y1 = px(v);
+          g.fillStyle = s.color;
+          g.fillRect(x, Math.min(y0, y1), bw * 0.92, Math.abs(y0 - y1));
+        });
+        if (i % tickEvery === 0) { g.fillStyle = "#5A6675"; g.save(); g.translate(pad.l + plotW * (i + 0.5) / groups, H - pad.b + 16); g.rotate(-Math.PI / 4); g.textAlign = "right"; g.fillText(lab, 0, 0); g.restore(); }
+      });
+      if (opts.line) {
+        const lv = opts.line.values.filter(v => v != null && isFinite(v));
+        let lmax = Math.max(...lv) * 1.15, lmin = 0; if (lmax === lmin) lmax = lmin + 1;
+        const ly = (v) => pad.t + (H - pad.t - pad.b) * (1 - (v - lmin) / (lmax - lmin));
+        g.strokeStyle = opts.line.color || "#1F3A5F"; g.lineWidth = 3.5; g.beginPath();
+        opts.line.values.forEach((v, i) => { if (v == null) return;
+          const x = pad.l + plotW * (i + 0.5) / groups; const y = ly(v);
+          i === 0 ? g.moveTo(x, y) : g.lineTo(x, y); });
+        g.stroke();
+        g.fillStyle = opts.line.color || "#1F3A5F"; g.textAlign = "left"; g.font = "15px Arial";
+        for (let i = 0; i <= 4; i++) {
+          const v = lmin + (lmax - lmin) * i / 4;
+          g.fillText((Math.round(v * 10) / 10) + "%", W - pad.r + 2, ly(v) + 5);
+        }
+      }
+    } else if (kind === "stack") {
+      const groups = n, bw = plotW / groups * 0.62;
+      labels.forEach((lab, i) => {
+        let acc = 0;
+        series.forEach(s => {
+          const v = s.values[i]; if (v == null) return;
+          const x = pad.l + plotW * (i + 0.19) / groups;
+          const y0 = px(acc), y1 = px(acc + v);
+          g.fillStyle = s.color;
+          g.fillRect(x, Math.min(y0, y1), bw, Math.abs(y0 - y1));
+          acc += v;
+        });
+        if (i % tickEvery === 0) { g.fillStyle = "#5A6675"; g.save(); g.translate(pad.l + plotW * (i + 0.5) / groups, H - pad.b + 16); g.rotate(-Math.PI / 4); g.textAlign = "right"; g.fillText(lab, 0, 0); g.restore(); }
+        g.fillStyle = "#1F3A5F"; g.textAlign = "center"; g.font = "bold 14px Arial";
+        g.fillText(Math.round(acc), pad.l + plotW * (i + 0.5) / groups, px(acc) - 6);
+        g.font = "14px Arial";
+      });
+    } else if (kind === "bar") {
+      const groups = n, bw = plotW / groups * 0.7 / series.length;
+      labels.forEach((lab, i) => {
+        series.forEach((s, si) => {
+          const v = s.values[i]; if (v == null) return;
+          const x = pad.l + plotW * (i + 0.15) / groups + si * bw;
+          g.fillStyle = s.color;
+          const y0 = px(0), y1 = px(v);
+          g.fillRect(x, Math.min(y0, y1), bw * 0.9, Math.abs(y0 - y1));
+        });
+        if (i % tickEvery === 0) { g.fillStyle = "#5A6675"; g.save(); g.translate(pad.l + plotW * (i + 0.5) / groups, H - pad.b + 16); g.rotate(-Math.PI / 4); g.textAlign = "right"; g.fillText(lab, 0, 0); g.restore(); }
+      });
+    } else {
+      series.forEach(s => {
+        g.strokeStyle = s.color; g.lineWidth = 3; g.beginPath();
+        s.values.forEach((v, i) => { if (v == null) return;
+          const x = pad.l + plotW * (n === 1 ? 0.5 : i / (n - 1)); const y = px(v);
+          i === 0 ? g.moveTo(x, y) : g.lineTo(x, y); });
+        g.stroke();
+      });
+      labels.forEach((lab, i) => { if (i % tickEvery === 0) { g.fillStyle = "#5A6675"; g.save(); g.translate(pad.l + plotW * (n === 1 ? 0.5 : i / (n - 1)), H - pad.b + 16); g.rotate(-Math.PI / 4); g.textAlign = "right"; g.fillText(lab, 0, 0); g.restore(); } });
+    }
+  }
+  async function chartPNG(kind, labels, series, opts) {
+    const cv = document.createElement("canvas");
+    cv.width = opts.w || 900; cv.height = opts.h || 560;
+    drawChart(cv, kind, labels, series, opts);
+    const blob = await new Promise(r => cv.toBlob(r, "image/png"));
+    return new Uint8Array(await blob.arrayBuffer());
+  }
+
+  // ---- pptx writer ----
+  const EMU = 914400; // per inch; slide 13.333 x 7.5 in (16:9)
+  const SW = Math.round(13.3333 * EMU), SH = Math.round(7.5 * EMU);
+  const emu = (inch) => Math.round(inch * EMU);
+  function textBox(x, y, w, h, runs, opts = {}) {
+    // runs: [{text,size,bold,color,bullet,italic}]
+    const paras = runs.map(r =>
+      `<a:p><a:pPr${r.bullet ? "" : ""}>${r.bullet ? '<a:buChar char="•"/>' : "<a:buNone/>"}</a:pPr><a:r><a:rPr lang="en-US" sz="${(r.size || 14) * 100}"${r.bold ? ' b="1"' : ""}${r.italic ? ' i="1"' : ""}><a:solidFill><a:srgbClr val="${r.color || "5A6675"}"/></a:solidFill><a:latin typeface="Calibri"/></a:rPr><a:t>${xml(r.text)}</a:t></a:r></a:p>`).join("");
+    return `<p:sp><p:nvSpPr><p:cNvPr id="${opts.id}" name="t${opts.id}"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr><p:spPr><a:xfrm><a:off x="${emu(x)}" y="${emu(y)}"/><a:ext cx="${emu(w)}" cy="${emu(h)}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr><p:txBody><a:bodyPr wrap="square"><a:normAutofit/></a:bodyPr><a:lstStyle/>${paras}</p:txBody></p:sp>`;
+  }
+  function picture(relId, x, y, w, h, id) {
+    return `<p:pic><p:nvPicPr><p:cNvPr id="${id}" name="img${id}"/><p:cNvPicPr/><p:nvPr/></p:nvPicPr><p:blipFill><a:blip r:embed="${relId}"/><a:stretch><a:fillRect/></a:stretch></p:blipFill><p:spPr><a:xfrm><a:off x="${emu(x)}" y="${emu(y)}"/><a:ext cx="${emu(w)}" cy="${emu(h)}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr></p:pic>`;
+  }
+  const THEME = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<a:theme xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" name="Corridor"><a:themeElements><a:clrScheme name="Corridor"><a:dk1><a:srgbClr val="1F3A5F"/></a:dk1><a:lt1><a:srgbClr val="FFFFFF"/></a:lt1><a:dk2><a:srgbClr val="5A6675"/></a:dk2><a:lt2><a:srgbClr val="E3E2E6"/></a:lt2><a:accent1><a:srgbClr val="1F3A5F"/></a:accent1><a:accent2><a:srgbClr val="2E86AB"/></a:accent2><a:accent3><a:srgbClr val="4F7694"/></a:accent3><a:accent4><a:srgbClr val="F2C14E"/></a:accent4><a:accent5><a:srgbClr val="F09C52"/></a:accent5><a:accent6><a:srgbClr val="DCE7F2"/></a:accent6><a:hlink><a:srgbClr val="4F7694"/></a:hlink><a:folHlink><a:srgbClr val="5A6675"/></a:folHlink></a:clrScheme><a:fontScheme name="Corridor"><a:majorFont><a:latin typeface="Calibri"/><a:ea typeface=""/><a:cs typeface=""/></a:majorFont><a:minorFont><a:latin typeface="Calibri"/><a:ea typeface=""/><a:cs typeface=""/></a:minorFont></a:fontScheme><a:fmtScheme name="Corridor"><a:fillStyleLst><a:solidFill><a:schemeClr val="phClr"/></a:solidFill><a:solidFill><a:schemeClr val="phClr"/></a:solidFill><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:fillStyleLst><a:lnStyleLst><a:ln w="6350"><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:ln><a:ln w="12700"><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:ln><a:ln w="19050"><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:ln></a:lnStyleLst><a:effectStyleLst><a:effectStyle><a:effectLst/></a:effectStyle><a:effectStyle><a:effectLst/></a:effectStyle><a:effectStyle><a:effectLst/></a:effectStyle></a:effectStyleLst><a:bgFillStyleLst><a:solidFill><a:schemeClr val="phClr"/></a:solidFill><a:solidFill><a:schemeClr val="phClr"/></a:solidFill><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:bgFillStyleLst></a:fmtScheme></a:themeElements></a:theme>';
+  function writePptx(slides) {
+    // slides: [{bg, shapes:[xml strings], images:[{relId, png}]}]
+    const files = [];
+    const N = slides.length;
+    files.push({ name: "[Content_Types].xml", data:
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/><Override PartName="/ppt/slideMasters/slideMaster1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideMaster+xml"/><Override PartName="/ppt/slideLayouts/slideLayout1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"/><Override PartName="/ppt/theme/theme1.xml" ContentType="application/vnd.openxmlformats-officedocument.theme+xml"/>' +
+      slides.map((_, i) => `<Override PartName="/ppt/slides/slide${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>`).join("") + "</Types>" });
+    files.push({ name: "_rels/.rels", data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="ppt/presentation.xml"/></Relationships>' });
+    files.push({ name: "ppt/presentation.xml", data:
+      `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<p:presentation xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:sldMasterIdLst><p:sldMasterId id="2147483648" r:id="rId1"/></p:sldMasterIdLst><p:sldIdLst>${slides.map((_, i) => `<p:sldId id="${256 + i}" r:id="rId${i + 2}"/>`).join("")}</p:sldIdLst><p:sldSz cx="${SW}" cy="${SH}"/></p:presentation>` });
+    files.push({ name: "ppt/_rels/presentation.xml.rels", data:
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideMaster" Target="slideMasters/slideMaster1.xml"/>' +
+      slides.map((_, i) => `<Relationship Id="rId${i + 2}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide${i + 1}.xml"/>`).join("") + "</Relationships>" });
+    files.push({ name: "ppt/slideMasters/slideMaster1.xml", data:
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<p:sldMaster xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:cSld><p:bg><p:bgPr><a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill><a:effectLst/></p:bgPr></p:bg><p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr/></p:spTree></p:cSld><p:clrMap bg1="lt1" tx1="dk1" bg2="lt2" tx2="dk2" accent1="accent1" accent2="accent2" accent3="accent3" accent4="accent4" accent5="accent5" accent6="accent6" hlink="hlink" folHlink="folHlink"/><p:sldLayoutIdLst><p:sldLayoutId id="2147483649" r:id="rId1"/></p:sldLayoutIdLst></p:sldMaster>' });
+    files.push({ name: "ppt/slideMasters/_rels/slideMaster1.xml.rels", data:
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout" Target="../slideLayouts/slideLayout1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme" Target="../theme/theme1.xml"/></Relationships>' });
+    files.push({ name: "ppt/slideLayouts/slideLayout1.xml", data:
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<p:sldLayout xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:cSld><p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr/></p:spTree></p:cSld><p:clrMapOvr><a:overrideClrMapping bg1="lt1" tx1="dk1" bg2="lt2" tx2="dk2" accent1="accent1" accent2="accent2" accent3="accent3" accent4="accent4" accent5="accent5" accent6="accent6" hlink="hlink" folHlink="folHlink"/></p:clrMapOvr></p:sldLayout>' });
+    files.push({ name: "ppt/slideLayouts/_rels/slideLayout1.xml.rels", data:
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideMaster" Target="../slideMasters/slideMaster1.xml"/></Relationships>' });
+    files.push({ name: "ppt/theme/theme1.xml", data: THEME });
+    slides.forEach((sl, i) => {
+      const bg = sl.bg ? `<p:bg><p:bgPr><a:solidFill><a:srgbClr val="${sl.bg}"/></a:solidFill><a:effectLst/></p:bgPr></p:bg>` : "";
+      files.push({ name: `ppt/slides/slide${i + 1}.xml`, data:
+        `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:cSld>${bg}<p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr/>${sl.shapes.join("")}</p:spTree></p:cSld><p:clrMapOvr><a:overrideClrMapping bg1="lt1" tx1="dk1" bg2="lt2" tx2="dk2" accent1="accent1" accent2="accent2" accent3="accent3" accent4="accent4" accent5="accent5" accent6="accent6" hlink="hlink" folHlink="folHlink"/></p:clrMapOvr></p:sld>` });
+      const rels = ['<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rIdL" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout" Target="../slideLayouts/slideLayout1.xml"/>'];
+      (sl.images || []).forEach((im, k) => {
+        files.push({ name: `ppt/media/image_${i + 1}_${k + 1}.png`, data: im.png });
+        rels.push(`<Relationship Id="${im.relId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/image_${i + 1}_${k + 1}.png"/>`);
+      });
+      rels.push("</Relationships>");
+      files.push({ name: `ppt/slides/_rels/slide${i + 1}.xml.rels`, data: rels.join("") });
+    });
+    return zipStore(files);
+  }
+
+  const download = (blob, name) => { const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = name; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000); };
+
+  return { readXlsxToCsv, writeXlsx, writePptx, textBox, picture, chartPNG, drawChart, download };
+})();
+/* ===== OFFICE LIB END ===== */
+
+/* ===== ENGINE START (pure, DOM-free) ===== */
+const FIELDS = {
+  submarket:    {required:true,  cands:["Submarket","Submarket Name","Geography Name","Market","Market Name"]},
+  period:       {required:true,  cands:["Period","Quarter","Date","As Of"]},
+  inventory_sf: {required:true,  cands:["Inventory SF","Inventory","Existing SF","Total Inventory SF"]},
+  vacant_sf:    {required:false, cands:["Vacant SF","Total Vacant SF"]},
+  vacancy_rate: {required:false, cands:["Vacancy Rate","Vacancy %","Total Vacancy"]},
+  net_absorption:{required:true, cands:["Net Absorption SF","Net Absorption","Absorption SF"]},
+  asking_rent:  {required:false, cands:["Market Asking Rent/SF","Asking Rent","Market Asking Rent","Asking Rent/SF","Rent"]},
+  under_construction_sf:{required:false,cands:["Under Construction SF","UC SF","Under Construction"]},
+  class_a_vac:  {required:false, cands:["Class A Vacancy %","Class A Vacancy Rate","4-5 Star Vacancy Rate"]},
+  class_b_vac:  {required:false, cands:["Class B Vacancy %","Class B Vacancy Rate","1-3 Star Vacancy Rate"]}
+};
+
+function parseCSV(text){
+  const rows=[]; let row=[],cell="",inQ=false;
+  for(let i=0;i<text.length;i++){const ch=text[i];
+    if(inQ){ if(ch==='"'){ if(text[i+1]==='"'){cell+='"';i++;} else inQ=false;} else cell+=ch; }
+    else{ if(ch==='"')inQ=true;
+      else if(ch===','){row.push(cell);cell="";}
+      else if(ch==='\n'||ch==='\r'){ if(ch==='\r'&&text[i+1]==='\n')i++;
+        row.push(cell);cell=""; if(row.length>1||row[0]!=="")rows.push(row); row=[]; }
+      else cell+=ch; } }
+  if(cell!==""||row.length){row.push(cell); if(row.length>1||row[0]!=="")rows.push(row);}
+  if(!rows.length)return{headers:[],records:[]};
+  const headers=rows[0].map(h=>h.trim());
+  return {headers, records:rows.slice(1).map(r=>{const o={};headers.forEach((h,j)=>o[h]=(r[j]??"").trim());return o;})};
+}
+
+function resolveColumns(headers){
+  const norm=s=>s.trim().toLowerCase();
+  const actual={}; headers.forEach(h=>actual[norm(h)]=h);
+  const resolved={},missing=[];
+  for(const[f,spec]of Object.entries(FIELDS)){
+    let found=null;
+    for(const c of spec.cands){ if(actual[norm(c)]){found=actual[norm(c)];break;} }
+    resolved[f]=found;
+    if(!found&&spec.required)missing.push(f);
+  }
+  return{resolved,missing};
+}
+
+const num=v=>{const n=parseFloat(String(v).replace(/[$,%\s,]/g,""));return isNaN(n)?null:n;};
+
+// normalize "2015 Q1" / "2015Q1" / "Q1 2015" / "1Q15" -> "2015Q1"; sortable
+function normPeriod(s){
+  s=String(s).trim().toUpperCase();
+  let m=s.match(/(\d{4})\s*Q([1-4])/); if(m)return m[1]+"Q"+m[2];
+  m=s.match(/Q([1-4])\s*(\d{4})/);     if(m)return m[2]+"Q"+m[1];
+  m=s.match(/^([1-4])Q(\d{2})$/);      if(m)return "20"+m[2]+"Q"+m[1];
+  m=s.match(/^(\d{4})-(\d{2})/);       if(m){const q=Math.ceil(parseInt(m[2],10)/3);return m[1]+"Q"+q;}
+  return null;
+}
+function qBack(p,n){ // p="2026Q2", n quarters back
+  let y=+p.slice(0,4), q=+p.slice(5);
+  q-=n; while(q<1){q+=4;y--;}
+  return y+"Q"+q;
+}
+
+function computeScreen(records,res,sel,win){
+  // rows for selected submarkets, keyed
+  const rows=records.map(r=>({
+    sm:String(r[res.submarket]||"").trim(),
+    p:normPeriod(r[res.period]),
+    inv:num(r[res.inventory_sf]),
+    vsf:res.vacant_sf?num(r[res.vacant_sf]):null,
+    vr:res.vacancy_rate?num(r[res.vacancy_rate]):null,
+    abs:num(r[res.net_absorption]),
+    rent:res.asking_rent?num(r[res.asking_rent]):null,
+    uc:res.under_construction_sf?num(r[res.under_construction_sf]):null,
+    va:res.class_a_vac?num(r[res.class_a_vac]):null,
+    vb:res.class_b_vac?num(r[res.class_b_vac]):null,
+  })).filter(r=>r.p&&sel.includes(r.sm));
+
+  const periods=[...new Set(rows.map(r=>r.p))].sort();
+  if(!periods.length) return {error:"No rows matched the selected submarkets (check the period format)."};
+  const latest=periods[periods.length-1];
+  const prior=qBack(latest,4);
+
+  const at=p=>rows.filter(r=>r.p===p);
+  const vac=r=>{ if(r.vsf!=null)return r.vsf;
+    if(r.inv!=null&&r.vr!=null){let x=r.vr; if(x>1)x=x/100; return r.inv*x;} return 0; };
+
+  const L=at(latest);
+  const totInv=L.reduce((s,r)=>s+(r.inv||0),0);
+  const totVac=L.reduce((s,r)=>s+vac(r),0);
+  const totUC =L.reduce((s,r)=>s+(r.uc||0),0);
+
+  // baseline: avg quarterly net absorption across window, / 3
+  const inWin=rows.filter(r=>r.p>=win.start&&r.p<=win.end);
+  const winPeriods=[...new Set(inWin.map(r=>r.p))].sort();
+  const qTotals=winPeriods.map(p=>inWin.filter(r=>r.p===p).reduce((s,r)=>s+(r.abs||0),0));
+  const monthly=qTotals.length? (qTotals.reduce((a,b)=>a+b,0)/qTotals.length)/3 : null;
+
+  const wRent=set=>{let s=0,w=0;for(const r of set){if(r.rent!=null&&r.inv>0){s+=r.rent*r.inv;w+=r.inv;}}return w? s/w:null;};
+  const rentNow=wRent(L), rentPrior=wRent(at(prior));
+
+  const wClass=(set,key)=>{let s=0,w=0;for(const r of set){if(r[key]!=null&&r.inv>0){s+=r[key]*r.inv;w+=r.inv;}}return w? +(s/w).toFixed(1):null;};
+  const vA=wClass(L,'va'), vB=wClass(L,'vb');
+
+  const M={};
+  M.months_of_supply={name:"Months of supply",unit:"months",
+    value:(monthly&&monthly>0)? +(totVac/monthly).toFixed(1):null,
+    inputs:{as_of:latest,total_vacant_sf:Math.round(totVac),monthly_absorption_baseline:monthly?Math.round(monthly):null,
+      baseline_window:win.start+"–"+win.end,window_quarters:winPeriods.length},
+    note:(monthly&&monthly>0)?"":"No absorption rows found inside the baseline window."};
+  M.forward_months_of_supply={name:"Forward months of supply",unit:"months",
+    value:(monthly&&monthly>0)? +(totUC/monthly).toFixed(1):null,
+    inputs:{as_of:latest,under_construction_sf:Math.round(totUC),monthly_absorption_baseline:monthly?Math.round(monthly):null},
+    note:res.under_construction_sf?"":"No under-construction column resolved."};
+  M.vacancy_rate={name:"Overall vacancy",unit:"%",
+    value: totInv? +((100*totVac/totInv).toFixed(1)):null,
+    inputs:{as_of:latest,total_vacant_sf:Math.round(totVac),inventory_sf:Math.round(totInv)},note:""};
+  M.vacancy_by_class={name:"Vacancy A / B",unit:"%",
+    value:(vA!=null&&vB!=null)? vA+" / "+vB : null,
+    inputs:{as_of:latest,class_A:vA,class_B:vB,method:"inventory-weighted average of submarket class rates"},
+    note:(vA!=null&&vB!=null)?(vB<vA?"Class B tighter than Class A":"Class A tighter than Class B"):"Class-slice columns not present in this export."};
+  M.rent_growth={name:"Rent growth",unit:"% (yoy)",
+    value:(rentNow!=null&&rentPrior>0)? +((100*(rentNow-rentPrior)/rentPrior).toFixed(1)):null,
+    inputs:{as_of:latest,prior_period:prior,current:rentNow?+rentNow.toFixed(2):null,prior:rentPrior?+rentPrior.toFixed(2):null,
+      method:"inventory-weighted asking rent"},
+    note:(rentNow!=null&&rentPrior>0)?"":"Need asking-rent rows at both "+latest+" and "+prior+"."};
+  return {metrics:M,latest,monthly,submarkets:sel.length,rows:rows.length};
+}
+
+function supplyFlag(m){ if(m==null)return"na"; const b=benchFlag(m); if(b)return b; if(m<=9)return"tight"; if(m>=15)return"loose"; return"balanced"; }
+/* ===== ENGINE END ===== */
+
+/* ===== sample dataset: 3 submarkets, 2015Q1–2019Q4 window + recent quarters ===== */
+function buildSample(){
+  const subs=[
+    {n:"Gastonia",    inv:20000000, absPre:200000, vacNow:4.0, va:5.0, vb:3.2, uc:300000, rentNow:8.40, rentPrior:7.90},
+    {n:"Spartanburg", inv:30000000, absPre:300000, vacNow:4.0, va:5.5, vb:3.0, uc:450000, rentNow:8.10, rentPrior:7.70},
+    {n:"Greenville",  inv:25000000, absPre:250000, vacNow:3.0, va:4.0, vb:2.5, uc:250000, rentNow:8.70, rentPrior:8.20}];
+  const lines=["Submarket,Period,Inventory SF,Vacancy Rate,Net Absorption SF,Asking Rent,Under Construction SF,Class A Vacancy %,Class B Vacancy %"];
+  for(const s of subs){
+    for(let y=2015;y<=2019;y++)for(let q=1;q<=4;q++)
+      lines.push(`${s.n},${y} Q${q},${s.inv},5.0,${s.absPre},7.00,0,6.0,4.0`);
+    // recent five quarters: 2025Q2..2026Q2 (prior-year rent sits at 2025Q2)
+    const recent=[["2025 Q2",s.rentPrior],["2025 Q3",s.rentPrior+0.1],["2025 Q4",s.rentPrior+0.2],["2026 Q1",s.rentNow-0.1],["2026 Q2",s.rentNow]];
+    recent.forEach(([p,r],i)=>{
+      lines.push(`${s.n},${p},${s.inv},${i===4?s.vacNow:5.0},${Math.round(s.absPre*0.6)},${r.toFixed(2)},${i===4?s.uc:0},${i===4?s.va:6.0},${i===4?s.vb:4.0}`);
+    });
+  }
+  return lines.join("\n");
+}
+
+/* ===== UI ===== */
+let HEADERS=[],RECORDS=[],RESOLVED=null,MODE="research",CORRIDOR="Corridor",CAP=null,RAW="";
+const CATALOG={
+ "I-85 Southeast (Charlotte–Atlanta)":["atlanta -","charlotte -","greenville - sc","spartanburg","gastonia","anderson - sc","gainesville - ga","athens - ga"],
+ "I-95 / NJ Turnpike (NY–Philadelphia)":["new jersey","new york","trenton","philadelphia","wilmington - de"],
+ "I-10 West (LA–Phoenix)":["los angeles","inland empire","riverside","phoenix","tucson"],
+ "I-35 Texas (DFW–San Antonio)":["dallas","fort worth","waco","temple","austin","san antonio"],
+ "I-45 Texas (Dallas–Houston)":["dallas","houston"],
+ "I-4 Florida (Tampa–Daytona)":["tampa","lakeland","orlando","deltona","daytona"],
+ "I-81 Distribution (Scranton–Roanoke)":["scranton","lehigh","allentown","harrisburg","hagerstown","winchester","roanoke"],
+ "I-40 Tennessee (Memphis–Knoxville)":["memphis","jackson - tn","nashville","knoxville"],
+ "I-16 / Savannah (Port–Atlanta)":["savannah","macon","atlanta -"],
+ "I-5 West (Seattle–LA)":["seattle","portland - or","sacramento","stockton","los angeles"],
+ "Chicago–Columbus (I-80/I-65/I-70)":["chicago -","gary -","indianapolis","columbus - oh","fort wayne","dayton -"]};
+const $=id=>document.getElementById(id);
+const drop=$("drop"),fileIn=$("file"),errBox=$("err");
+function showErr(m){errBox.textContent=m;errBox.style.display="block";}
+function clearErr(){errBox.style.display="none";}
+
+drop.addEventListener("click",e=>{if(e.target.id!=="sampleBtn")fileIn.click();});
+drop.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" ")fileIn.click();});
+["dragover","dragenter"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add("hover");}));
+["dragleave","drop"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove("hover");}));
+drop.addEventListener("drop",e=>{const f=e.dataTransfer.files[0];if(f)readFile(f);});
+fileIn.addEventListener("change",()=>{if(fileIn.files[0])readFile(fileIn.files[0]);});
+$("sampleBtn").addEventListener("click",e=>{e.stopPropagation();loadMock();});
+
+function readFile(f){
+  showErr("This demonstration build accepts no uploads — it runs a synthetic national dataset only. It runs on the synthetic sample only.");
+}
+function ingest(text){
+  clearErr(); RAW=text;
+  const{headers,records}=parseCSV(text);
+  if(!records.length){showErr("That file has no data rows.");return;}
+  // Forecast cap: Some exports include forecast quarters.
+  // If an "As Of" column exists, actuals end one quarter before it.
+  CAP=null;
+  const asofCol=headers.find(h=>h.trim().toLowerCase()==="as of");
+  if(asofCol&&records.length){
+    const a=normPeriod(records[0][asofCol]);
+    if(a){CAP=qBack(a,1);}
+  }
+  HEADERS=headers;RECORDS=records;
+  const{resolved,missing}=resolveColumns(headers);
+  RESOLVED=resolved;
+  buildMapPanel(headers,resolved,missing);
+  if(!missing.length && (resolved.vacant_sf||resolved.vacancy_rate)){
+    buildCorridorPanel(); kpiResolve(); buildKpiPanel(); screenNow();
+  } else if(!missing.length){
+    showErr("Need either a Vacant SF column or a Vacancy Rate column. Pick one below, then apply.");
+  }
+}
+
+function buildMapPanel(headers,resolved,missing){
+  const box=$("maps");box.innerHTML="";
+  for(const[f,spec]of Object.entries(FIELDS)){
+    const row=document.createElement("div");row.className="maprow";
+    const lab=document.createElement("div");
+    lab.innerHTML=`${f.replace(/_/g," ")}${spec.required?' <span style="color:#B4531F">*</span>':''}`;
+    const sel=document.createElement("select");sel.dataset.field=f;
+    const o0=document.createElement("option");o0.value="";o0.textContent="— not present —";sel.appendChild(o0);
+    headers.forEach(h=>{const o=document.createElement("option");o.value=h;o.textContent=h;if(resolved[f]===h)o.selected=true;sel.appendChild(o);});
+    row.appendChild(lab);row.appendChild(sel);box.appendChild(row);
+  }
+  if(missing.length){
+    showErr("Could not auto-find required column(s): "+missing.join(", ")+
+      "\nPick them from the dropdowns, then apply.\nColumns in this file: "+headers.join(", "));
+  }
+  $("mapPanel").style.display="block";
+}
+
+$("applyMap").addEventListener("click",()=>{
+  const res={};document.querySelectorAll("#maps select").forEach(s=>res[s.dataset.field]=s.value||null);
+  const missing=Object.entries(FIELDS).filter(([f,s])=>s.required&&!res[f]).map(([f])=>f);
+  if(missing.length){showErr("Still missing required field(s): "+missing.join(", "));return;}
+  if(!res.vacant_sf&&!res.vacancy_rate){showErr("Need either Vacant SF or Vacancy Rate.");return;}
+  clearErr();RESOLVED=res;buildCorridorPanel(); kpiResolve(); buildKpiPanel();screenNow();
+});
+
+function fillCatalog(){
+  const sel=$("catalog");
+  if(sel.options.length>1) return;
+  Object.keys(CATALOG).forEach(k=>{const o=document.createElement("option");o.value=k;o.textContent=k;sel.appendChild(o);});
+}
+function setChecks(pred){
+  document.querySelectorAll(".smBox").forEach(b=>{b.checked=pred(b.value);});
+}
+$("applyCatalog").addEventListener("click",()=>{
+  const k=$("catalog").value;
+  if(!k){$("mapStatus").textContent="Choose a corridor from the catalog first.";return;}
+  const toks=CATALOG[k];
+  setChecks(v=>toks.some(t=>v.toLowerCase().includes(t)));
+  const n=document.querySelectorAll(".smBox:checked").length;
+  if(!n){$("mapStatus").textContent="No markets in this file match that corridor.";return;}
+  $("corrName").value=k; $("mapStatus").textContent=n+" market(s) selected — review, then Screen corridor.";
+  screenNow();
+});
+$("selNone").addEventListener("click",()=>setChecks(()=>false));
+$("selAll").addEventListener("click",()=>setChecks(()=>true));
+$("aiMapBtn").addEventListener("click",async()=>{
+  const name=$("corrName").value.trim()||$("catalog").value;
+  if(!name){$("mapStatus").textContent="Type a corridor name (or pick one) for the AI to map.";return;}
+  const avail=[...document.querySelectorAll(".smBox")].map(b=>b.value);
+  $("mapStatus").textContent="Asking the model to propose membership…";
+  let out;
+  try{
+    const r=await fetch("/api/ai",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({task:"map_corridor",corridor:name,available_markets:avail})});
+    out=await r.json();
+  }catch(e){$("mapStatus").textContent="API unreachable: "+e.message;return;}
+  if(out.configured===false){$("mapStatus").textContent=out.note;return;}
+  if(out.error){$("mapStatus").textContent=out.error;return;}
+  if(!out.markets.length){$("mapStatus").textContent="Model found no matching markets in this file.";return;}
+  setChecks(v=>out.markets.includes(v));
+  $("corrName").value=name;
+  $("mapStatus").textContent="AI proposed "+out.markets.length+" market(s) — review the checkboxes (membership is a judgment call), then Screen corridor.";
+});
+
+function csvEscape(v){v=String(v??"");return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}
+function filteredCSV(sel){
+  const smCol=RESOLVED.submarket, pCol=RESOLVED.period;
+  let rows=RECORDS.filter(r=>sel.includes(String(r[smCol]||"").trim()));
+  if(CAP&&pCol){rows=rows.filter(r=>{const p=normPeriod(r[pCol]);return p&&p<=CAP;});}
+  return [HEADERS.map(csvEscape).join(",")].concat(rows.map(r=>HEADERS.map(h=>csvEscape(r[h])).join(","))).join("\n");
+}
+
+function buildCorridorPanel(){
+  const subs=[...new Set(RECORDS.map(r=>String(r[RESOLVED.submarket]||"").trim()).filter(Boolean))].sort();
+  const box=$("smChecks");box.innerHTML="";
+  subs.forEach(sm=>{
+    box.insertAdjacentHTML("beforeend",
+      `<label><input type="checkbox" class="smBox" value="${sm.replace(/"/g,"&quot;")}" checked> ${sm}</label>`);
+  });
+  $("corrPanel").style.display="block";
+  fillCatalog();
+  computeBenchmark();
+  const sm=$("smSearch");
+  if(sm&&!sm._wired){sm._wired=true;sm.addEventListener("input",()=>{
+    const q=sm.value.toLowerCase();
+    document.querySelectorAll("#smChecks label").forEach(l=>{l.style.display=l.textContent.toLowerCase().includes(q)?"flex":"none";});
+  });}
+  if($("pinBtn")&&!$("pinBtn")._wired){$("pinBtn")._wired=true;$("pinBtn").addEventListener("click",()=>{
+    if(PINNED){PINNED=null;$("pinBtn").textContent="Pin this screen as Corridor A";$("compareOut").innerHTML="";}
+    else pinCurrent();
+  });}
+  if(CAP){$("mapStatus").textContent="Forecast rows detected (Base Case) — screening actuals through "+CAP+".";}
+}
+
+$("screenCorr").addEventListener("click",screenNow);
+$("modeR").addEventListener("click",()=>{MODE="research";$("modeR").classList.add("on");$("modeA").classList.remove("on");screenNow();});
+$("modeA").addEventListener("click",()=>{MODE="acquisitions";$("modeA").classList.add("on");$("modeR").classList.remove("on");screenNow();});
+
+
+/* ===== KPI PICKER (optional metrics; deterministic, computed in-browser) ===== */
+const KPI_DEFS=[
+ {id:"availability_rate",label:"Availability Rate",tier:2,on:true,kind:"wrate",cands:["Availability Rate"],unit:"%",
+  note:"broader than vacancy (marketed + sublet); leads vacancy"},
+ {id:"occupancy_rate",label:"Occupancy Rate",tier:2,on:true,kind:"wrate",cands:["Occupancy Rate"],unit:"%",
+  note:"inverse framing of vacancy"},
+ {id:"net_abs_12mo",label:"Net Absorption (12 Mo)",tier:2,on:true,kind:"sum",cands:["Net Absorption SF 12 Mo"],unit:"SF",
+  note:"trailing-year demand; smoother than the quarterly print"},
+ {id:"starts_12mo",label:"Construction Starts (12 Mo)",tier:2,on:true,kind:"sum",cands:["Construction Starts SF 12 Mo"],unit:"SF",
+  note:"pipeline momentum, upstream of Under Construction"},
+ {id:"deliveries_4q",label:"Deliveries (trailing 4Q)",tier:2,on:true,kind:"trail4",cands:["Gross Delivered SF"],unit:"SF",
+  note:"supply inflow over the last year"},
+ {id:"reported_rentg_12mo",label:"Reported Rent Growth (12 Mo)",tier:2,on:true,kind:"wrate",cands:["Market Asking Rent Growth 12 Mo"],unit:"%",
+  note:"the data provider's precomputed figure — cross-check vs the tool's computed rent growth"},
+ {id:"cap_rate",label:"Cap Rate",tier:3,on:false,kind:"cap",cands:["Cap Rate"],nCands:["Cap Rate Transactions"],unit:"%",
+  note:"transaction-derived; sparse in thin markets — n disclosed, refuses at n=0"},
+];
+let KPI_RES={};
+function kpiResolve(){
+  const norm=s=>s.trim().toLowerCase();
+  const actual={}; HEADERS.forEach(h=>actual[norm(h)]=h);
+  KPI_RES={};
+  for(const k of KPI_DEFS){
+    KPI_RES[k.id]={col:null,nCol:null};
+    for(const c of k.cands){ if(actual[norm(c)]){KPI_RES[k.id].col=actual[norm(c)];break;} }
+    if(k.nCands)for(const c of k.nCands){ if(actual[norm(c)]){KPI_RES[k.id].nCol=actual[norm(c)];break;} }
+  }
+}
+function buildKpiPanel(){
+  const box=$("kpiChecks"); if(!box)return; box.innerHTML="";
+  const tiers={2:"Market fundamentals",3:"Capital markets"};
+  for(const t of [2,3]){
+    box.insertAdjacentHTML("beforeend",'<div style="flex-basis:100%;font-size:11px;font-weight:700;color:var(--ink);letter-spacing:.08em;margin-top:4px;">'+tiers[t].toUpperCase()+'</div>');
+    for(const k of KPI_DEFS.filter(x=>x.tier===t)){
+      const avail=KPI_RES[k.id]&&KPI_RES[k.id].col;
+      box.insertAdjacentHTML("beforeend",
+        `<label title="${k.note}" style="font-weight:400;font-size:13px;display:flex;align-items:center;gap:6px;margin:0;${avail?"":"opacity:.45;"}">
+          <input type="checkbox" class="kpiBox" value="${k.id}" ${k.on&&avail?"checked":""} ${avail?"":"disabled"}> ${k.label}${avail?"":" (not in this export)"}
+        </label>`);
+    }
+  }
+  box.insertAdjacentHTML("beforeend",'<div class="note" style="flex-basis:100%;">Core five always on. Optionals are deterministic — computed in this browser from the export’s rows (inventory-weighted rates; summed SF flows) — and carry the same audit trail.</div>');
+  box.querySelectorAll(".kpiBox").forEach(b=>b.addEventListener("change",()=>{ if(LAST) renderExtras(LAST.sel); }));
+}
+function kpiRows(sel){
+  const R=RESOLVED;
+  let rows=RECORDS.filter(r=>sel.includes(String(r[R.submarket]||"").trim()));
+  if(CAP&&R.period){rows=rows.filter(r=>{const p=normPeriod(r[R.period]);return p&&p<=CAP;});}
+  return rows;
+}
+function computeExtras(sel){
+  const num=v=>{const n=parseFloat(String(v).replace(/[$,%\s,]/g,""));return isNaN(n)?null:n;};
+  const rows=kpiRows(sel);
+  const periods=[...new Set(rows.map(r=>normPeriod(r[RESOLVED.period])).filter(Boolean))].sort();
+  if(!periods.length)return[];
+  const latest=periods[periods.length-1];
+  const last4=periods.slice(-4);
+  const L=rows.filter(r=>normPeriod(r[RESOLVED.period])===latest);
+  const invOf=r=>num(r[RESOLVED.inventory_sf])||0;
+  const out=[];
+  const chosen=[...document.querySelectorAll(".kpiBox:checked")].map(b=>b.value);
+  for(const k of KPI_DEFS){
+    if(!chosen.includes(k.id))continue;
+    const col=KPI_RES[k.id]&&KPI_RES[k.id].col; if(!col)continue;
+    if(k.kind==="wrate"){
+      let s=0,w=0; for(const r of L){const v=num(r[col]);const inv=invOf(r);if(v!=null&&inv>0){s+=v*inv;w+=inv;}}
+      out.push({id:k.id,label:k.label,unit:k.unit,value:w?+(s/w).toFixed(1):null,
+        inputs:{as_of:latest,method:"inventory-weighted average across "+L.length+" market rows"},note:k.note});
+    }else if(k.kind==="sum"){
+      let s=0,n=0; for(const r of L){const v=num(r[col]);if(v!=null){s+=v;n++;}}
+      out.push({id:k.id,label:k.label,unit:k.unit,value:n?Math.round(s):null,
+        inputs:{as_of:latest,method:"sum across selected markets (column is trailing 12 Mo)"},note:k.note});
+    }else if(k.kind==="trail4"){
+      let s=0,n=0;
+      for(const p of last4){ for(const r of rows){ if(normPeriod(r[RESOLVED.period])!==p)continue;
+        const v=num(r[col]); if(v!=null){s+=v;n++;} } }
+      out.push({id:k.id,label:k.label,unit:k.unit,value:n?Math.round(s):null,
+        inputs:{periods:last4.join(", "),method:"sum of quarterly values over trailing 4 quarters"},note:k.note});
+    }else if(k.kind==="cap"){
+      const nCol=KPI_RES[k.id].nCol;
+      let s=0,w=0,n=0;
+      for(const r of L){const v=num(r[col]); if(v==null)continue;
+        const wt=nCol?(num(r[nCol])||0):invOf(r);
+        if(nCol){n+=wt;} if(wt>0){s+=v*wt;w+=wt;}}
+      out.push({id:k.id,label:k.label,unit:k.unit,
+        value:(w>0&&(!nCol||n>0))?+(s/w).toFixed(2):null,
+        inputs:{as_of:latest,transactions:nCol?n:"n/a",method:nCol?"transaction-weighted; refuses when n=0":"inventory-weighted"},
+        note:(nCol&&n===0)?"no transactions in period — refusing rather than guessing":k.note});
+    }
+  }
+  return out;
+}
+function fmtKpi(v,unit){
+  if(v==null)return"—";
+  return unit==="SF"?Number(v).toLocaleString():v;
+}
+function renderExtras(sel){
+  document.querySelectorAll("#cards .card.extra").forEach(e=>e.remove());
+  const extras=computeExtras(sel);
+  const cards=$("cards");
+  for(const m of extras){
+    const el=document.createElement("div");el.className="card extra";el.tabIndex=0;
+    el.innerHTML=`<div class="k">${m.label} <span style="font-size:9px;color:var(--steel);">OPTIONAL</span></div>
+      <div class="v">${fmtKpi(m.value,m.unit)}<span class="u"> ${m.value==null?"":m.unit}</span></div>
+      ${m.note?`<div class="why">${m.note}</div>`:""}
+      <div class="audit">inputs: ${JSON.stringify(m.inputs,null,1)}</div>`;
+    el.addEventListener("click",()=>el.classList.toggle("open"));
+    cards.appendChild(el);
+  }
+}
+/* ===== KPI PICKER END ===== */
+
+
+/* ===== SYNTHETIC NATIONAL DATASET (mock; procedurally generated, seeded) =====
+   Values are invented from generic priors — NOT derived from any real market data. */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+const MOCK_METROS=(function(){
+  const named=["Atlanta - GA","Charlotte - NC","Greenville - SC","Spartanburg - SC","Gainesville - GA","Athens - GA","Anderson - SC",
+   "New York - NY","Northern New Jersey - NJ","Trenton - NJ","Philadelphia - PA","Wilmington - DE",
+   "Los Angeles - CA","Inland Empire (Riverside) - CA","Phoenix - AZ","Tucson - AZ",
+   "Dallas - TX","Fort Worth - TX","Waco - TX","Temple - TX","Austin - TX","San Antonio - TX","Houston - TX",
+   "Tampa - FL","Lakeland - FL","Orlando - FL","Deltona-Daytona - FL",
+   "Scranton - PA","Lehigh Valley (Allentown) - PA","Harrisburg - PA","Hagerstown - MD","Winchester - VA","Roanoke - VA",
+   "Memphis - TN","Jackson - TN","Nashville - TN","Knoxville - TN",
+   "Savannah - GA","Macon - GA",
+   "Seattle - WA","Portland - OR","Sacramento - CA","Stockton - CA",
+   "Chicago - IL","Gary - IN","Indianapolis - IN","Columbus - OH","Fort Wayne - IN","Dayton - OH",
+   "Charlottesville - VA"];
+  const fill=["Boise - ID","Reno - NV","Salt Lake City - UT","Denver - CO","Colorado Springs - CO","Albuquerque - NM","El Paso - TX","Oklahoma City - OK","Tulsa - OK","Kansas City - MO","St. Louis - MO","Des Moines - IA","Omaha - NE","Minneapolis - MN","Milwaukee - WI","Madison - WI","Detroit - MI","Grand Rapids - MI","Toledo - OH","Cleveland - OH","Cincinnati - OH","Louisville - KY","Lexington - KY","Pittsburgh - PA","Buffalo - NY","Rochester - NY","Syracuse - NY","Albany - NY","Hartford - CT","Providence - RI","Boston - MA","Worcester - MA","Baltimore - MD","Washington - DC","Richmond - VA","Norfolk - VA","Raleigh - NC","Durham - NC","Greensboro - NC","Winston-Salem - NC","Columbia - SC","Charleston - SC","Jacksonville - FL","Miami - FL","Fort Lauderdale - FL","West Palm Beach - FL","Fort Myers - FL","Birmingham - AL","Huntsville - AL","Mobile - AL","New Orleans - LA","Baton Rouge - LA","Little Rock - AR","Springfield - MO","Wichita - KS","Fresno - CA","Bakersfield - CA","San Diego - CA","Oakland - CA","San Jose - CA","Las Vegas - NV","Tacoma - WA","Spokane - WA","Eugene - OR","Chattanooga - TN","Greenville - NC","Fayetteville - AR","Lubbock - TX","Corpus Christi - TX","McAllen - TX","Laredo - TX","Amarillo - TX"];
+  return named.concat(fill).map(n=>n+" USA");
+})();
+function buildMockNational(){
+  const rnd=mulberry32(20260722);
+  const cols=["Geography Name","Period","As Of","Inventory SF","Vacancy Rate","Net Absorption SF","Market Asking Rent/SF","Under Construction SF","Availability Rate","Occupancy Rate","Net Absorption SF 12 Mo","Construction Starts SF 12 Mo","Gross Delivered SF","Market Asking Rent Growth 12 Mo","Cap Rate","Cap Rate Transactions"];
+  const lines=[cols.join(",")];
+  const qtrs=[]; for(let y=2015;y<=2026;y++)for(let q=1;q<=4;q++){ if(y===2026&&q>2)break; qtrs.push([y,q]); }
+  for(const m of MOCK_METROS){
+    const tier=rnd(); const inv0=(tier<0.15?600:tier<0.45?180:tier<0.8?60:15)*(0.6+rnd()*0.9)*1e6;
+    let inv=inv0, rent=4+rnd()*4.5, vac=4+rnd()*3;
+    const absBase=0.0018+rnd()*0.0022; // quarterly absorption as share of inventory
+    let uc=inv*(0.004+rnd()*0.006);
+    const hist=[];
+    for(const[y,q]of qtrs){
+      const t=(y-2015)*4+q;
+      // cycle shape: tighten to 2021-22 dip, supply-wave rise 2023-25, plateau 2026
+      let drift=0;
+      if(y<=2019)drift=-0.04+rnd()*0.06;
+      else if(y<=2021)drift=-0.25-rnd()*0.2;
+      else if(y<=2024)drift=0.35+rnd()*0.3;
+      else drift=0.05+(rnd()-0.5)*0.2;
+      vac=Math.min(14,Math.max(2,vac+drift));
+      const demandMult=(y===2021||y===2020&&q>2)?1.9:(y>=2023&&y<=2024?0.45+rnd()*0.5:1);
+      let absq=inv*absBase*demandMult*(0.6+rnd()*0.8);
+      if(y>=2023&&rnd()<0.18)absq=-Math.abs(absq)*0.5;
+      const ucTarget=inv*((y>=2021&&y<=2023)?0.012+rnd()*0.01:(y>=2024?0.004+rnd()*0.004:0.006+rnd()*0.005));
+      uc=uc*0.7+ucTarget*0.3;
+      const deliv=Math.max(0,uc*(0.12+rnd()*0.08));
+      const rentg=(y===2021||y===2022)?0.02+rnd()*0.02:(y>=2024?0.002+rnd()*0.012:0.008+rnd()*0.012);
+      rent*=(1+rentg/4*4/4+ (rentg/4)*3); rent=rent*(1+0); rent+= 0; // quarterly compounding below
+      rent=rent*(1+rentg/4);
+      inv+=deliv;
+      hist.push({y,q,inv,vac,absq,rent,uc,deliv});
+    }
+    hist.forEach((r,i)=>{
+      const last4=hist.slice(Math.max(0,i-3),i+1);
+      const na12=last4.reduce((s,x)=>s+x.absq,0);
+      const st12=last4.reduce((s,x)=>s+x.uc*0.2,0);
+      const rentPrior=i>=4?hist[i-4].rent:r.rent;
+      const rg12=100*(r.rent-rentPrior)/rentPrior;
+      const deals=rnd()<0.55?Math.floor(rnd()*6):0;
+      const cap=deals?5.2+rnd()*2.6:"";
+      lines.push([`"${m}"`,`${r.y} Q${r.q}`,"2026 Q3",Math.round(r.inv),(r.vac).toFixed(2)+"%",Math.round(r.absq),r.rent.toFixed(2),Math.round(r.uc),(r.vac+1+rnd()*1.5).toFixed(2)+"%",(100-r.vac).toFixed(2)+"%",Math.round(na12),Math.round(st12),Math.round(r.deliv),rg12.toFixed(2)+"%",cap&&cap.toFixed(2)+"%",deals].join(","));
+    });
+  }
+  return lines.join("\n");
+}
+let DATA_MODE="";
+function loadMock(){
+  DATA_MODE="mock";
+  CORRIDOR="Synthetic National (mock)";
+  if($("corrName"))$("corrName").value="";
+  ingest(buildMockNational());
+}
+
+function spanQuarters(ws,we){
+  if(!ws||!we)return null;
+  let y1=+ws.slice(0,4),q1=+ws.slice(5),y2=+we.slice(0,4),q2=+we.slice(5);
+  return (y2-y1)*4+(q2-q1)+1;
+}
+function windowWarning(out){
+  const el=$("winWarn"); if(!el)return;
+  const ws=normPeriod($("winStart").value),we=normPeriod($("winEnd").value);
+  const span=spanQuarters(ws,we);
+  const got=out.metrics&&out.metrics.months_of_supply.inputs.window_quarters;
+  if(span&&got&&got<span){
+    el.style.display="block";
+    el.textContent="⚠ Baseline window spans "+span+" quarters but this file contains only "+got+" of them — the baseline averages the available quarters. Pull history from "+$("winStart").value+" (or adjust the window) for the standard baseline.";
+  } else el.style.display="none";
+}
+
+
+/* ===== NATIONAL BENCHMARK (deterministic; every market in the file) ===== */
+let BENCH=null;
+function computeBenchmark(){
+  BENCH=null;
+  if(!RESOLVED||!RECORDS.length)return;
+  const num=v=>{const n=parseFloat(String(v).replace(/[$,%\s,]/g,""));return isNaN(n)?null:n;};
+  const ws=normPeriod($("winStart").value)||"2015Q1", we=normPeriod($("winEnd").value)||"2019Q4";
+  const R=RESOLVED, per={};
+  for(const r of RECORDS){
+    const p=normPeriod(r[R.period]); if(!p)continue;
+    if(CAP&&p>CAP)continue;
+    const m=String(r[R.submarket]||"").trim(); if(!m)continue;
+    (per[m]=per[m]||{}); const q=(per[m][p]=per[m][p]||{inv:0,vac:0,abs:0,uc:0});
+    const inv=num(r[R.inventory_sf])||0; q.inv+=inv;
+    if(R.vacant_sf)q.vac+=num(r[R.vacant_sf])||0;
+    else if(R.vacancy_rate){let x=num(r[R.vacancy_rate]);if(x!=null){if(x>1)x/=100;q.vac+=inv*x;}}
+    q.abs+=num(r[R.net_absorption])||0;
+    if(R.under_construction_sf)q.uc+=num(r[R.under_construction_sf])||0;
+  }
+  const rows=[];
+  for(const m in per){
+    const ps=Object.keys(per[m]).sort(); if(!ps.length)continue;
+    const latest=ps[ps.length-1];
+    const winPs=ps.filter(p=>p>=ws&&p<=we);
+    if(!winPs.length)continue;
+    const monthly=winPs.reduce((s,p)=>s+per[m][p].abs,0)/winPs.length/3;
+    if(!(monthly>0))continue;
+    const eq=winPs.reduce((s2,p)=>s2+(per[m][p].inv?per[m][p].vac/per[m][p].inv:0),0)/winPs.length;
+    const L=per[m][latest];
+    const vr=L.inv?L.vac/L.inv:0;
+    const xv=(Math.max(0,vr-eq)*L.inv+L.uc)/monthly;
+    rows.push({m,mos:L.vac/monthly,xv});
+  }
+  rows.sort((a,b)=>a.mos-b.mos);
+  BENCH={asof:CAP||"latest",rows,vals:rows.map(r=>r.mos),
+    xvVals:rows.map(r=>r.xv).filter(v=>isFinite(v)).sort((a,b)=>a-b)};
+}
+function benchPercentile(mos){
+  if(!BENCH||mos==null||!BENCH.vals.length)return null;
+  const below=BENCH.vals.filter(v=>v<mos).length;
+  return Math.round(100*below/BENCH.vals.length);
+}
+function benchFlag(mos){
+  const p=benchPercentile(mos);
+  if(p==null)return null;
+  return p<=25?"tight":p>=75?"loose":"balanced";
+}
+/* ===== A/B COMPARE ===== */
+let PINNED=null;
+function pinCurrent(){
+  if(!LAST){showErr("Run a screen first, then pin it.");return;}
+  const M=LAST.out.metrics;
+  PINNED={name:CORRIDOR,latest:LAST.out.latest,n:LAST.sel.length,
+    vals:{mos:M.months_of_supply.value,fwd:M.forward_months_of_supply.value,
+      vac:M.vacancy_rate.value,rent:M.rent_growth.value,
+      pct:benchPercentile(M.months_of_supply.value)}};
+  $("pinBtn").textContent="Pinned: "+PINNED.name+" — unpin";
+  renderCompare();
+}
+function renderCompare(){
+  const box=$("compareOut"); if(!box)return;
+  if(!PINNED||!LAST){box.innerHTML="";return;}
+  const M=LAST.out.metrics;
+  const B={name:CORRIDOR,latest:LAST.out.latest,n:LAST.sel.length,
+    vals:{mos:M.months_of_supply.value,fwd:M.forward_months_of_supply.value,
+      vac:M.vacancy_rate.value,rent:M.rent_growth.value,
+      pct:benchPercentile(M.months_of_supply.value)}};
+  if(B.name===PINNED.name&&B.n===PINNED.n){box.innerHTML='<div class="note">Pinned corridor is the current screen — select and screen a second corridor to compare.</div>';return;}
+  const rows=[["Months of supply","mos","months"],["Forward supply","fwd","months"],
+    ["Overall vacancy","vac","%"],["Rent growth","rent","% yoy"],["National MoS percentile","pct","pctile"]];
+  box.innerHTML='<table><tr><th></th><th>'+PINNED.name+' (A)</th><th>'+B.name+' (B)</th><th>Δ (B−A)</th></tr>'+
+    rows.map(([lab,k,u])=>{
+      const a=PINNED.vals[k],b=B.vals[k];
+      const d=(a!=null&&b!=null)?(Math.round((b-a)*10)/10):null;
+      return `<tr><td>${lab}</td><td>${a??"—"} ${a!=null?u:""}</td><td>${b??"—"} ${b!=null?u:""}</td><td>${d==null?"—":(d>0?"+":"")+d}</td></tr>`;
+    }).join("")+'</table><div class="note">Same file, same baseline window, same as-of — the comparison is apples-to-apples by construction.</div>';
+}
+/* ===== AS-OF SCRUBBER (history replay from the deterministic series) ===== */
+function renderScrubber(){
+  const S=seriesForSelection(); const M=LAST&&LAST.out.metrics;
+  const wrap=$("scrubWrap"); if(!wrap)return;
+  const base=M&&M.months_of_supply.inputs.monthly_absorption_baseline;
+  if(!M||!base||S.length<4){wrap.style.display="none";return;}
+  wrap.style.display="block";
+  const mosT=S.map(r=>({p:r.p,mos:r.vac/base,vac:r.vacPct,abs:r.abs}));
+  OfficeLib.drawChart($("cvMosT"),"line",mosT.map(r=>r.p),
+    [{name:"Months of supply",values:mosT.map(r=>+(r.mos.toFixed(1))),color:"#2E86AB"}],
+    {title:"Months of supply over time — fixed "+$("winStart").value+"–"+$("winEnd").value+" baseline"});
+  const sl=$("scrub"); sl.max=mosT.length-1; sl.value=mosT.length-1;
+  const show=i=>{const r=mosT[i];
+    $("scrubOut").innerHTML='<b style="color:var(--ink);">'+r.p+'</b> · '+r.mos.toFixed(1)+' months of supply · '+ (r.vac!=null?r.vac.toFixed(1):"—")+'% vacancy · net absorption '+Math.round(r.abs).toLocaleString()+' SF';};
+  sl.oninput=()=>show(+sl.value);
+  show(mosT.length-1);
+}
+
+
+/* ===== EXCESS-VACANCY MODEL: excess vacancy + pipeline over baseline (per market) =====
+   Equilibrium vacancy =
+   each market's window-average; excess = max(0, current - equilibrium) x inventory;
+   MoS_XV = (excess SF + under-construction SF) / monthly baseline absorption. */
+function computeXV(sel){
+  const num=v=>{const n=parseFloat(String(v).replace(/[$,%\s,]/g,""));return isNaN(n)?null:n;};
+  const ws=normPeriod($("winStart").value)||"2015Q1", we=normPeriod($("winEnd").value)||"2019Q4";
+  const R=RESOLVED, per={};
+  for(const r of RECORDS){
+    const m=String(r[R.submarket]||"").trim(); if(!sel.includes(m))continue;
+    const p=normPeriod(r[R.period]); if(!p)continue; if(CAP&&p>CAP)continue;
+    (per[m]=per[m]||{}); const q=(per[m][p]=per[m][p]||{inv:0,vac:0,abs:0,uc:0});
+    const inv=num(r[R.inventory_sf])||0; q.inv+=inv;
+    if(R.vacant_sf)q.vac+=num(r[R.vacant_sf])||0;
+    else if(R.vacancy_rate){let x=num(r[R.vacancy_rate]);if(x!=null){if(x>1)x/=100;q.vac+=inv*x;}}
+    q.abs+=num(r[R.net_absorption])||0;
+    if(R.under_construction_sf)q.uc+=num(r[R.under_construction_sf])||0;
+  }
+  const rows=[]; let agg={excess:0,uc:0,monthly:0};
+  for(const m in per){
+    const ps=Object.keys(per[m]).sort(); if(!ps.length)continue;
+    const latest=ps[ps.length-1], L=per[m][latest];
+    const winPs=ps.filter(p=>p>=ws&&p<=we); if(!winPs.length)continue;
+    const eq=winPs.reduce((s,p)=>s+(per[m][p].inv?per[m][p].vac/per[m][p].inv:0),0)/winPs.length;
+    const monthly=winPs.reduce((s,p)=>s+per[m][p].abs,0)/winPs.length/3;
+    if(!(monthly>0))continue;
+    const vacRate=L.inv?L.vac/L.inv:0;
+    const excess=Math.max(0,(vacRate-eq))*L.inv;
+    rows.push({m,vac:100*vacRate,eq:100*eq,
+      exMo:excess/monthly,pipeMo:L.uc/monthly,mos:(excess+L.uc)/monthly});
+    agg.excess+=excess; agg.uc+=L.uc; agg.monthly+=monthly;
+  }
+  rows.sort((a,b)=>a.mos-b.mos);
+  const corridor=agg.monthly>0?{exMo:agg.excess/agg.monthly,pipeMo:agg.uc/agg.monthly,
+    mos:(agg.excess+agg.uc)/agg.monthly}:null;
+  return {rows,corridor};
+}
+let XV=null;
+function xvMedian(){
+  if(!BENCH||!BENCH.xvVals||!BENCH.xvVals.length)return null;
+  const v=BENCH.xvVals, n=v.length;
+  return n%2?v[(n-1)/2]:(v[n/2-1]+v[n/2])/2;
+}
+function shortM(m){return String(m).replace(/ USA$/,"").replace(/ - [A-Z]{2}$/,"");}
+function renderBreakout(sel){
+  const box=$("xvPanel"); if(!box)return;
+  XV=computeXV(sel);
+  if(!XV.rows.length||!XV.corridor){box.style.display="none";return;}
+  box.style.display="block";
+  const med=xvMedian();
+  $("xvHead").innerHTML='Excess-vacancy model — corridor: <b style="color:var(--ink);font-size:20px;">'
+    +XV.corridor.mos.toFixed(0)+' months</b> <span class="note">(excess vacancy '
+    +XV.corridor.exMo.toFixed(0)+' + pipeline '+XV.corridor.pipeMo.toFixed(0)+')'
+    +(med!=null?' · file median '+med.toFixed(0):'')+'</span>';
+  const labels=XV.rows.map(r=>shortM(r.m));
+  OfficeLib.drawChart($("cvXv"),"stack",labels,
+    [{name:"Excess vacancy (mo)",values:XV.rows.map(r=>+r.exMo.toFixed(1)),color:"#1F3A5F"},
+     {name:"Pipeline (mo)",values:XV.rows.map(r=>+r.pipeMo.toFixed(1)),color:"#2E86AB"}],
+    {title:"Months of supply, excess-vacancy model — excess (navy) + pipeline (blue)"+(med!=null?"  ·  file median "+med.toFixed(0):"")});
+  $("xvTable").innerHTML='<table><tr><th>Market</th><th>Excess-vac. MoS'+(med!=null?' (Δ vs median)':'')+'</th><th>Vacancy vs equilibrium</th><th>Composition read</th></tr>'+
+    XV.rows.map(r=>{
+      const d=med!=null?Math.round(r.mos-med):null;
+      const read=r.pipeMo>r.exMo?"pipeline-led — deliveries cure on a schedule":"standing vacancy — clears on demand’s schedule";
+      return `<tr><td>${shortM(r.m)}</td><td><b>${r.mos.toFixed(0)}</b>${d!=null?" ("+(d>0?"+":"")+d+")":""}</td><td>${r.vac.toFixed(1)}% vs ${r.eq.toFixed(1)}%</td><td>${read}</td></tr>`;
+    }).join("")+'</table>';
+}
+
+async function screenNow(){
+  const sel=[...document.querySelectorAll(".smBox:checked")].map(b=>b.value);
+  if(!sel.length){showErr("Select at least one submarket.");return;}
+  clearErr();
+  const nm=$("corrName").value.trim(); if(nm)CORRIDOR=nm;
+  let out;
+  try{
+    const resp=await fetch("/api/screen",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({csv:filteredCSV(sel),selection:sel,window_start:$("winStart").value,
+        window_end:$("winEnd").value,mapping:RESOLVED})});
+    out=await resp.json();
+  }catch(e){ showErr("Could not reach the engine API — is the server running? ("+e.message+")"); return; }
+  if(out.error){showErr(out.error);return;}
+  render(out,sel);
+  windowWarning(out);
+  renderExtras(sel);
+  renderLiveCharts(sel);
+  renderScrubber();
+  renderCompare();
+  renderBreakout(sel);
+  // benchmark annotation on the months-of-supply card
+  (function(){
+    const p=benchPercentile(out.metrics.months_of_supply.value);
+    if(p==null)return;
+    const card=document.querySelector("#cards .card");
+    if(card&&!card.querySelector(".pctile")){
+      const d=document.createElement("div");d.className="why pctile";
+      d.textContent=p+"th percentile of "+BENCH.rows.length+" markets in this file (higher = looser)";
+      card.insertBefore(d,card.querySelector(".audit"));
+    }
+  })();
+}
+
+let LAST=null;
+function render(out,sel){
+  LAST={out:out,sel:sel};
+  $("results").style.display="block";
+  $("corrTitle").textContent=`2  Corridor screen — ${CORRIDOR}${DATA_MODE==="mock"?"  · SYNTHETIC DATA":""}  (${sel.length} submarkets · as of ${out.latest} · engine: ${out.engine||"?"})`;
+  const M=out.metrics;
+  const order=["months_of_supply","forward_months_of_supply","vacancy_rate","vacancy_by_class","rent_growth"];
+  const cards=$("cards");cards.innerHTML="";
+  for(const k of order){
+    const m=M[k];
+    const el=document.createElement("div");el.className="card";el.tabIndex=0;
+    el.innerHTML=`<div class="k">${m.name}</div>
+      <div class="v">${m.value==null?"—":m.value}<span class="u"> ${m.value==null?"":m.unit}</span></div>
+      ${m.note?`<div class="why">${m.note}</div>`:""}
+      <div class="audit">inputs: ${JSON.stringify(m.inputs,null,1)}</div>`;
+    el.addEventListener("click",()=>el.classList.toggle("open"));
+    cards.appendChild(el);
+  }
+  const flag=supplyFlag(M.months_of_supply.value);
+  const vt={tight:"Supply/demand supports the thesis — proceed to underwriting.",
+    balanced:"Supply/demand is balanced — no red flag, confirm with the pipeline.",
+    loose:"Supply looks heavy — pressure-test the thesis before proceeding.",
+    na:"Insufficient data for a supply verdict — check the baseline window."}[flag];
+  const av=$("acqVerdict");
+  if(MODE==="acquisitions"){
+    av.style.display="block";
+    av.innerHTML=`<span class="flag ${flag}">${flag.toUpperCase()}</span>
+      <div class="big" style="margin-top:8px;">${vt}</div>
+      <div class="note">Deterministic — identical numbers to the Research view; only the framing changes.</div>`;
+  } else av.style.display="none";
+
+  const parts=[CORRIDOR+"."];
+  const mos=M.months_of_supply.value,fwd=M.forward_months_of_supply.value;
+  if(mos!=null){const tone=flag==="tight"?"a tight supply picture":flag==="loose"?"an elevated supply position":"a broadly balanced supply picture";
+    parts.push(`Current months of supply of roughly ${mos} suggests ${tone} relative to the ${$("winStart").value}–${$("winEnd").value} absorption baseline.`);}
+  if(fwd!=null)parts.push(`The under-construction pipeline represents about ${fwd} months of forward supply at that baseline pace.`);
+  if(M.vacancy_by_class.note&&M.vacancy_by_class.value!=null)parts.push(M.vacancy_by_class.note+" on current vacancy.");
+  if(M.rent_growth.value!=null)parts.push(`Asking rents are up ${M.rent_growth.value}% year over year on an inventory-weighted basis.`);
+  parts.push("(Draft — figures deterministic; prose template-generated; institutional ownership requires a property-level pull.)");
+  $("narrative").textContent=parts.join(" ");
+}
+
+const SAMPLE_BROKER=`Industrial MarketView — Q2 2026 (excerpt)\nThe corridor's industrial market continues to tighten, with overall vacancy of just 5.5% — among the lowest in the region. Asking rents grew a robust 9.2% year-over-year, reflecting sustained tenant demand. Institutional capital continues to deepen its footprint, now controlling roughly 60% of inventory. With demand outpacing deliveries, we estimate under 7 months of available supply at current absorption.`;
+$("sampleBrokerBtn").addEventListener("click",()=>{$("brokerText").value=SAMPLE_BROKER;});
+
+function engineValues(){
+  if(!LAST)return{};
+  const M=LAST.out.metrics, v={};
+  for(const k of ["months_of_supply","vacancy_rate","rent_growth"])
+    if(typeof M[k].value==="number") v[k]=M[k].value;
+  return v;
+}
+
+$("reconBtn").addEventListener("click",async()=>{
+  if(!LAST){showErr("Run a screen first — the Reconciler compares claims against those numbers.");return;}
+  const txt=$("brokerText").value.trim();
+  if(!txt){$("reconStatus").textContent="Paste an excerpt or load the sample.";return;}
+  clearErr(); $("reconStatus").textContent="Extracting claims…"; $("reconOut").innerHTML="";
+  let out;
+  try{
+    const r=await fetch("/api/ai",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({task:"reconcile",broker_text:txt,engine_values:engineValues()})});
+    out=await r.json();
+  }catch(e){$("reconStatus").textContent="API unreachable: "+e.message;return;}
+  if(out.error){$("reconStatus").textContent=out.error;return;}
+  if(out.configured===false){$("reconStatus").textContent="";$("reconOut").innerHTML=
+    '<div class="note" style="border-left:3px solid var(--yellow);padding:10px 12px;background:#FEF8E7;">LLM endpoint not configured — this module is the Phase 2 socket. It activates when LLM_PROVIDER / LLM_KEY are set in the app settings (Key Vault in production).</div>';return;}
+  const rows=out.claims||[];
+  if(!rows.length){$("reconStatus").textContent="No reconcilable claims found.";return;}
+  window.LASTRECON=rows;
+  $("reconStatus").textContent="Verdicts are |claim − engine| vs fixed thresholds — arithmetic, not model opinion.";
+  $("reconOut").innerHTML='<table><tr><th>Metric</th><th>Broker claim <span class="ai-badge">AI-EXTRACTED</span></th><th>Engine <span class="det-badge">COMPUTED</span></th><th>Δ</th><th>Verdict <span class="det-badge">CODE</span></th></tr>'+
+    rows.map(r=>`<tr><td>${r.metric.replace(/_/g," ")}<div class="quote">"${(r.quote||"").replace(/</g,"&lt;")}"</div></td><td>${r.value}</td><td>${r.engine??"—"}</td><td>${r.diff??"—"}</td><td><span class="rflag ${r.flag==="MATCH"?"match":r.flag==="DIVERGES"?"div":"noeng"}">${r.flag}</span></td></tr>`).join("")+"</table>";
+});
+
+function seriesForSelection(){
+  const sel=LAST?LAST.sel:[]; const R=RESOLVED;
+  const rows=RECORDS.filter(r=>sel.includes(String(r[R.submarket]||"").trim()));
+  const per={};
+  const num=v=>{const n=parseFloat(String(v).replace(/[$,%\s,]/g,""));return isNaN(n)?null:n;};
+  for(const r of rows){
+    const p=normPeriod(r[R.period]); if(!p)continue;
+    per[p]=per[p]||{inv:0,vac:0,abs:0,uc:0,rw:0,rs:0,del:0};
+    const inv=num(r[R.inventory_sf])||0;
+    per[p].inv+=inv;
+    if(R.vacant_sf){per[p].vac+=num(r[R.vacant_sf])||0;}
+    else if(R.vacancy_rate){let x=num(r[R.vacancy_rate]);if(x!=null){if(x>1)x/=100;per[p].vac+=inv*x;}}
+    per[p].abs+=num(r[R.net_absorption])||0;
+    if(R.under_construction_sf)per[p].uc+=num(r[R.under_construction_sf])||0;
+    const _dc=(typeof KPI_RES!=="undefined"&&KPI_RES.deliveries_4q&&KPI_RES.deliveries_4q.col);
+    if(_dc)per[p].del+=num(r[_dc])||0;
+    if(R.asking_rent){const rent=num(r[R.asking_rent]);if(rent!=null&&inv>0){per[p].rw+=rent*inv;per[p].rs+=inv;}}
+  }
+  const periods=Object.keys(per).sort();
+  return periods.map(p=>({p,inv:per[p].inv,vac:per[p].vac,
+    vacPct:per[p].inv?+(100*per[p].vac/per[p].inv).toFixed(2):null,
+    abs:per[p].abs,uc:per[p].uc,del:per[p].del||0,rent:per[p].rs?+(per[p].rw/per[p].rs).toFixed(2):null}));
+}
+
+
+function metricsSnapshot(){ const M=LAST.out.metrics; const o={}; for(const[k,m]of Object.entries(M)) o[k]=m.value; const p=benchPercentile(M.months_of_supply.value); if(p!=null){o.months_of_supply_national_percentile=p; o.benchmark_universe=BENCH.rows.length;} if(XV&&XV.corridor){o.xv_model_months=+XV.corridor.mos.toFixed(0); o.xv_excess_months=+XV.corridor.exMo.toFixed(0); o.xv_pipeline_months=+XV.corridor.pipeMo.toFixed(0);} return o; }
+
+async function buildDeck(copy){
+  const M=LAST.out.metrics, win=$("winStart").value+"–"+$("winEnd").value, S=seriesForSelection();
+  const T=OfficeLib.textBox, P=OfficeLib.picture;
+  const slides=[];
+  slides.push({bg:"1F3A5F",shapes:[
+    T(0.6,1.5,12,1.0,[{text:"Corridor Diligence Engine",size:34,bold:true,color:"FFFFFF"}],{id:2}),
+    T(0.6,2.6,12,0.8,[{text:CORRIDOR,size:22,color:"F2C14E"}],{id:3}),
+    T(0.6,6.4,12,0.5,[{text:"Corridor Diligence Engine   ·   screen as of "+LAST.out.latest+"   ·   baseline "+win,size:12,color:"DCE7F2"}],{id:4}),
+  ],images:[]});
+  const bl=(copy&&copy.bullets)||[
+    "Months of supply: "+(M.months_of_supply.value??"n/a")+" vs the "+win+" absorption baseline",
+    "Forward pipeline: "+(M.forward_months_of_supply.value??"n/a")+" months of supply under construction",
+    "Overall vacancy "+(M.vacancy_rate.value??"n/a")+"%"+(M.vacancy_by_class.value?"; class split "+M.vacancy_by_class.value:""),
+    "Rent growth "+(M.rent_growth.value??"n/a")+"% yoy, inventory-weighted"];
+  const mosPng=await OfficeLib.chartPNG("bar",["Current MoS","Forward MoS"],
+    [{name:"Months",values:[M.months_of_supply.value||0,M.forward_months_of_supply.value||0],color:"#1F3A5F"}],
+    {title:"Months of supply",w:760,h:600});
+  slides.push({bg:null,shapes:[
+    T(0.5,0.35,12.3,0.7,[{text:"1 · Where does supply stand? — "+(M.months_of_supply.value??"—")+" months",size:22,bold:true,color:"1F3A5F"}],{id:2}),
+    T(0.5,1.2,6.6,4.4,bl.map(b=>({text:b,size:15,bullet:true})),{id:3}),
+    T(0.5,6.6,8,0.5,[{text:"Source: sample market data — as of "+LAST.out.latest+((copy&&copy.bullets)?"  ·  copy model-drafted from computed figures, review before circulating":""),size:9,italic:true,color:"4F7694"}],{id:4}),
+    T(12.2,6.9,1,0.4,[{text:"2",size:10,color:"5A6675"}],{id:9}),
+    P("rId101",7.6,1.2,5.0,4.0,5),
+  ],images:[{relId:"rId101",png:mosPng}]});
+  if(S.length>3){
+    const vacPng=await OfficeLib.chartPNG("line",S.map(r=>r.p),[{name:"Vacancy %",values:S.map(r=>r.vacPct),color:"#1F3A5F"}],{title:"Vacancy %",w:900,h:620});
+    const absPng=await OfficeLib.chartPNG("bar",S.map(r=>r.p),[{name:"Net absorption SF",values:S.map(r=>r.abs),color:"#4F7694"}],{title:"Net absorption SF",w:900,h:620});
+    slides.push({bg:null,shapes:[
+      T(0.5,0.35,12.3,0.6,[{text:"2 · Is demand absorbing the pipeline?",size:20,bold:true,color:"1F3A5F"}],{id:2}),
+      T(0.5,6.6,10,0.4,[{text:"Source: sample market data — as of "+LAST.out.latest+"  ·  deterministic series for the selected markets",size:9,italic:true,color:"4F7694"}],{id:3}),
+      T(12.2,6.9,1,0.4,[{text:"3",size:10,color:"5A6675"}],{id:9}),
+      P("rId101",0.5,1.1,6.0,4.3,4), P("rId102",6.9,1.1,6.0,4.3,5),
+    ],images:[{relId:"rId101",png:vacPng},{relId:"rId102",png:absPng}]});
+  }
+  if(XV&&XV.rows.length){
+    const med=xvMedian();
+    const xvPng=await OfficeLib.chartPNG("stack",XV.rows.map(r=>shortM(r.m)),
+      [{name:"Excess",values:XV.rows.map(r=>+r.exMo.toFixed(1)),color:"#1F3A5F"},
+       {name:"Pipeline",values:XV.rows.map(r=>+r.pipeMo.toFixed(1)),color:"#2E86AB"}],
+      {title:"",w:1150,h:620});
+    slides.push({bg:null,shapes:[
+      T(0.5,0.3,9,0.35,[{text:"EXCESS-VACANCY MODEL  ·  MONTHS OF SUPPLY",size:11,bold:true,color:"2E86AB"}],{id:2}),
+      T(0.5,0.7,12.3,0.6,[{text:"Excess vacancy + pipeline, over "+win+" absorption — per market",size:20,bold:true,color:"1F3A5F"}],{id:3}),
+      T(0.5,5.55,12.3,0.9,[{text:"Green = standing (excess) vacancy months; teal = pipeline months. Pipeline burns off on a delivery schedule; standing vacancy clears on demand’s schedule — composition matters as much as the total."+(med!=null?" File median: "+med.toFixed(0)+" months.":""),size:13}],{id:4}),
+      T(0.5,6.6,9,0.4,[{text:"Source: sample market data; excess-vacancy model — as of "+LAST.out.latest,size:9,italic:true,color:"4F7694"}],{id:5}),
+      T(12.2,6.9,1,0.4,[{text:"4",size:10,color:"5A6675"}],{id:6}),
+      P("rIdB1",0.7,1.45,11.9,3.95,7),
+    ],images:[{relId:"rIdB1",png:xvPng}]});
+    const rs=[
+      T(0.5,0.3,9,0.35,[{text:"PUTTING IT TOGETHER",size:11,bold:true,color:"2E86AB"}],{id:2}),
+      T(0.5,0.7,12.3,0.6,[{text:"Situations, not one corridor",size:20,bold:true,color:"1F3A5F"}],{id:3})];
+    const cols=[[0.5,3.2],[3.8,1.9],[5.9,3.0],[9.0,3.8]];
+    ["Market","Excess-vac. MoS"+(med!=null?" (Δ med)":""),"Vacancy vs equilibrium","Read"].forEach((h,i)=>rs.push(T(cols[i][0],1.25,cols[i][1],0.35,[{text:h,size:12,bold:true,color:"1F3A5F"}],{id:10+i})));
+    XV.rows.slice(0,9).forEach((r,ri)=>{
+      const y=1.68+ri*0.5; const d=med!=null?Math.round(r.mos-med):null;
+      const vals=[shortM(r.m),r.mos.toFixed(0)+(d!=null?"  ("+(d>0?"+":"")+d+")":""),r.vac.toFixed(1)+"% vs "+r.eq.toFixed(1)+"%",r.pipeMo>r.exMo?"Pipeline-led — deliveries cure on schedule":"Standing vacancy — clears on demand’s schedule"];
+      vals.forEach((v,i)=>rs.push(T(cols[i][0],y,cols[i][1],0.48,[{text:v,size:11,bold:i===1,color:i===1?"1F3A5F":"5A6675"}],{id:20+ri*4+i})));
+    });
+    rs.push(T(0.5,6.6,9,0.4,[{text:"Source: sample market data; excess-vacancy model — as of "+LAST.out.latest,size:9,italic:true,color:"4F7694"}],{id:90}));
+    rs.push(T(12.2,6.9,1,0.4,[{text:"5",size:10,color:"5A6675"}],{id:91}));
+    slides.push({bg:null,shapes:rs,images:[]});
+  }
+
+  slides.push({bg:null,shapes:[
+    T(0.5,0.35,12.3,0.6,[{text:"Method & boundaries",size:20,bold:true,color:"1F3A5F"}],{id:2}),
+    T(0.5,1.2,12.3,4.6,[
+      {text:"Every metric is arithmetic — computed by the engine, traceable to source rows. No AI touches a number.",size:14,bullet:true},
+      {text:"AI performs two jobs only: extracting claims from broker prose, and drafting copy from computed figures.",size:14,bullet:true},
+      {text:(copy&&copy.outlook)?("Outlook (model-drafted, review): "+copy.outlook):"Baseline window and corridor membership are definitional judgment calls; review before relying on the screen.",size:14,bullet:true},
+      {text:"Institutional ownership is property-level and out of scope at market grain.",size:14,bullet:true},
+    ],{id:3}),
+  ],images:[]});
+  return OfficeLib.writePptx(slides);
+}
+
+$("deckBtn").addEventListener("click",async()=>{
+  if(!LAST){showErr("Run a screen first — the deck is built from it.");return;}
+  $("expStatus").textContent="Building deck…";
+  let copy=null;
+  try{
+    const r=await fetch("/api/ai",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({task:"deck_bullets",corridor:CORRIDOR,window:$("winStart").value+"–"+$("winEnd").value,metrics:metricsSnapshot()})});
+    const j=await r.json(); if(j.configured&&!j.error)copy=j;
+  }catch(e){/* offline/local: template copy */}
+  try{
+    const blob=await buildDeck(copy);
+    OfficeLib.download(blob,CORRIDOR.replace(/[^\w\-]+/g,"_")+"_screen.pptx");
+    $("expStatus").textContent="Deck downloaded"+(copy?" (AI copy)":" (template copy)")+" — built in this tab, no network needed.";
+  }catch(e){$("expStatus").textContent="Deck build failed: "+e.message;}
+});
+
+$("xlsBtn").addEventListener("click",async()=>{
+  if(!LAST){showErr("Run a screen first — the model is built from it.");return;}
+  $("expStatus").textContent="Building workbook…";
+  try{
+    const M=LAST.out.metrics, S=seriesForSelection(), latest=LAST.out.latest;
+    const sheets=[
+     {name:"ReadMe",rows:[["Corridor Diligence Engine — Excel model"],[],["Corridor",CORRIDOR],["As of",latest],
+       ["Baseline window",$("winStart").value+" – "+$("winEnd").value],[],
+       ["Sheets: Inputs (assumptions), Series (deterministic per-quarter data), Screen (metrics; months of supply is a live formula), ChartData (ready to chart in Excel)."],
+       ["Charts: native charts are generated in the accompanying deck; in Excel, insert charts from ChartData."],
+       ["Every figure is deterministic and traces to the Series sheet. Review before circulating."]]},
+     {name:"Inputs",rows:[["Assumption","Value","Note"],
+       ["Baseline window",$("winStart").value+" – "+$("winEnd").value,"pre-COVID absorption window — definitional; confirm with team"],
+       ["Monthly absorption baseline (SF)",M.months_of_supply.inputs.monthly_absorption_baseline,"average quarterly net absorption in window ÷ 3"],
+       ["Vacant SF (as of "+latest+")",M.months_of_supply.inputs.total_vacant_sf,""],
+       ["Under construction SF",M.forward_months_of_supply.inputs.under_construction_sf,""]]},
+     {name:"Series",rows:[["Period","Inventory SF","Vacant SF","Vacancy %","Net Absorption SF","Under Construction SF","Asking Rent ($/SF)"]].concat(
+        S.map(r=>[r.p,r.inv,Math.round(r.vac),r.vacPct,r.abs,r.uc,r.rent]))},
+     {name:"Screen",rows:[["Metric","Value","Unit","Basis"],
+       ["Months of supply",{f:"Inputs!B4/Inputs!B3"},"months","=Vacant SF ÷ monthly baseline (live formula)"],
+       ["Forward months of supply",{f:"Inputs!B5/Inputs!B3"},"months","=UC SF ÷ monthly baseline (live formula)"],
+       ["Overall vacancy",M.vacancy_rate.value,"%","engine"],
+       ["Vacancy A / B",M.vacancy_by_class.value||"n/a","%","inventory-weighted class rates"],
+       ["Rent growth",M.rent_growth.value,"% yoy","inventory-weighted asking rent"]]},
+     {name:"ChartData",rows:[["Period","Vacancy %","Net Absorption SF"]].concat(S.map(r=>[r.p,r.vacPct,r.abs]))}];
+    OfficeLib.download(OfficeLib.writeXlsx(sheets),CORRIDOR.replace(/[^\w\-]+/g,"_")+"_model.xlsx");
+    $("expStatus").textContent="Workbook downloaded — months of supply is a live formula on the Screen sheet.";
+  }catch(e){$("expStatus").textContent="Workbook build failed: "+e.message;}
+});
+
+
+async function chartDataURL(kind,labels,series,opts){
+  const cv=document.createElement("canvas");
+  cv.width=opts.w||900; cv.height=opts.h||560;
+  OfficeLib.drawChart(cv,kind,labels,series,opts);
+  return cv.toDataURL("image/png");
+}
+function escH(v){return String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+
+
+function buildLongRead(){
+  // Deterministic three-paragraph read: every sentence is an arithmetic statement.
+  const M=LAST.out.metrics, S=seriesForSelection(), win=$("winStart").value+"–"+$("winEnd").value;
+  if(!S.length) return $("narrative").textContent||"";
+  const last=S[S.length-1];
+  const q4=S.length>4?S[S.length-5]:null;
+  const preC=S.filter(r=>r.p>=normPeriod($("winStart").value)&&r.p<=normPeriod($("winEnd").value));
+  const preVac=preC.length? preC.reduce((s,r)=>s+(r.vacPct||0),0)/preC.length : null;
+  const abs4=S.slice(-4).reduce((s,r)=>s+(r.abs||0),0);
+  const base=M.months_of_supply.inputs.monthly_absorption_baseline;
+  const baseYr=base?base*12:null;
+  const ex=computeExtras(LAST.sel); const kv={}; ex.forEach(e=>kv[e.id]=e.value);
+  const p=[];
+  let s1=`${CORRIDOR} screens at ${M.months_of_supply.value??"—"} months of supply against the ${win} absorption baseline`;
+  if(M.vacancy_rate.value!=null){
+    s1+=`, with overall vacancy at ${M.vacancy_rate.value}%`;
+    if(q4&&q4.vacPct!=null)s1+=` (${last.vacPct>q4.vacPct?"up":"down"} from ${q4.vacPct.toFixed(1)}% a year ago`;
+    if(preVac!=null)s1+=`${q4?"; ":" ("}pre-COVID average ${preVac.toFixed(1)}%)`;
+    else if(q4)s1+=")";
+  }
+  s1+=". The level reflects the metric's construction — total vacant stock measured against pre-COVID net absorption — and is most meaningful relative to other corridors screened on the same definition.";
+  p.push(s1);
+  let s2=`Demand over the trailing year ran ${Math.round(abs4).toLocaleString()} SF of net absorption`;
+  if(baseYr)s2+=`, ${abs4>=baseYr?"above":"below"} the ${Math.round(baseYr).toLocaleString()} SF/yr pace the baseline implies`;
+  s2+=".";
+  if(kv.starts_12mo!=null&&kv.deliveries_4q!=null){
+    s2+=` On the supply side, trailing-year construction starts of ${Number(kv.starts_12mo).toLocaleString()} SF ${kv.starts_12mo<kv.deliveries_4q?"trail":"exceed"} deliveries of ${Number(kv.deliveries_4q).toLocaleString()} SF — ${kv.starts_12mo<kv.deliveries_4q?"consistent with a pipeline that is thinning as the market digests recent supply":"suggesting the pipeline is still building faster than it clears"}.`;
+  }
+  if(M.forward_months_of_supply.value!=null)s2+=` Under construction represents ${M.forward_months_of_supply.value} months of forward supply at the baseline pace.`;
+  p.push(s2);
+  let s3="";
+  if(M.rent_growth.value!=null)s3+=`Asking rents are ${M.rent_growth.value>=0?"up":"down"} ${Math.abs(M.rent_growth.value)}% year over year on an inventory-weighted basis`;
+  if(kv.reported_rentg_12mo!=null)s3+=`${s3?", ":""}broadly in line with the provider's precomputed ${kv.reported_rentg_12mo}% trailing figure`;
+  if(kv.cap_rate!=null)s3+=`${s3?". ":""}Transaction cap rates average ${kv.cap_rate}% on the period's reported deals`;
+  s3+=`. Every figure above is arithmetic from the export; the baseline window and verdict thresholds remain definitional judgment calls pending team confirmation.`;
+  p.push(s3);
+  return p.join("\n\n");
+}
+
+$("pagerBtn").addEventListener("click",async()=>{
+  if(!LAST){showErr("Run a screen first — the one-pager is built from it.");return;}
+  $("expStatus").textContent="Building one-pager…";
+  try{
+        const M=LAST.out.metrics, S=seriesForSelection(), A=seriesAnnual(), win=$("winStart").value+" \u2013 "+$("winEnd").value;
+    const boxNarr=($("narrative")&&$("narrative").textContent)||"";
+    const aiRead=/model-assisted|model-drafted/i.test(boxNarr);
+    const read=(aiRead&&boxNarr.length>250)?boxNarr:buildLongRead();
+    let comboImg="";
+    if(A.length>2){
+      comboImg=await chartDataURL("combo",A.map(r=>r.y),
+        [{name:"Completions",values:A.map(r=>Math.round(r.del)),color:"#4F7693"},
+         {name:"Net absorption",values:A.map(r=>Math.round(r.abs)),color:"#1F3A5F"}],
+        {title:"",w:1500,h:460,line:{name:"Vacancy",values:A.map(r=>r.vac),color:"#2E86AB"}});
+    }
+    const mi=M.months_of_supply.inputs;
+    const ex=computeExtras(LAST.sel); const kv={}; ex.forEach(e=>kv[e.id]=e.value);
+    const lastS=S.length?S[S.length-1]:null;
+    const rank=(typeof BENCH!=="undefined"&&BENCH&&M.months_of_supply.value!=null)?(BENCH.vals.filter(v=>v<M.months_of_supply.value).length+1)+" of "+BENCH.vals.length:"\u2014";
+    const xvTxt=(typeof XV!=="undefined"&&XV&&XV.corridor)?XV.corridor.mos.toFixed(0):"\u2014";
+    let recon=""; const reconEl=document.getElementById("reconOut");
+    if(reconEl&&reconEl.querySelector("table"))recon=reconEl.querySelector("table").outerHTML;
+    const stats=[["Inventory SF",lastS?Number(Math.round(lastS.inv)).toLocaleString():"\u2014"],
+      ["Overall Vacancy",(M.vacancy_rate.value??"\u2014")+"%"],
+      ["Months of Supply",(M.months_of_supply.value??"\u2014")],
+      ["Excess-Vacancy MoS",xvTxt],
+      ["MoS Rank (this file)",rank],
+      ["Rent Growth (yoy)",(M.rent_growth.value??"\u2014")+"%"]];
+    const html='<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+escH(CORRIDOR)+' \u2014 Corridor Screen</title><style>'+
+      '@page{size:letter landscape;margin:0.5in;}*{box-sizing:border-box;margin:0;padding:0;}'+
+      "body{font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;color:#3D454D;font-size:10px;line-height:1.45;}"+
+      'h1{color:#1F3A5F;font-size:19px;margin:0 0 6px;}'+
+      '.grid{display:flex;gap:0;border:1.5px solid #1F3A5F;}'+
+      '.lbl{flex:0 0 150px;background:#1F3A5F;color:#FFFFFF;font-weight:700;font-size:11px;padding:10px;}'+
+      '.bdy{flex:1;padding:9px 12px;font-size:9.6px;line-height:1.5;white-space:pre-line;}'+
+      '.readtag{display:inline-block;font-size:7.5px;font-weight:700;border-radius:999px;padding:1px 7px;background:#F2C14E;color:#5a4a00;margin-left:6px;}'+
+      '.chartwrap{border:1px solid #C9CED3;border-top:none;padding:6px 8px 2px;}'+
+      '.chartwrap img{width:100%;}'+
+      '.legend{font-size:8.5px;color:#5A6675;text-align:center;margin:2px 0 4px;}'+
+      '.legend b{font-weight:700;}'+
+      'table{width:100%;border-collapse:collapse;font-size:9.5px;}'+
+      '.stats{border:1px solid #C9CED3;border-top:none;}'+
+      '.stats th{background:#1F3A5F;color:#FFFFFF;padding:5px 8px;text-align:left;font-size:9px;}'+
+      '.stats td{padding:6px 8px;border-right:1px solid #E3E2E6;font-size:12px;font-weight:700;color:#1F3A5F;}'+
+      '.cmp{margin-top:8px;border:1px solid #C9CED3;}'+
+      '.cmp th{background:#1F3A5F;color:#FFFFFF;padding:4px 8px;text-align:left;font-size:9px;}'+
+      '.cmp td{padding:4px 8px;border-bottom:1px solid #E3E2E6;}'+
+      '.rflag{display:inline-block;font-size:7.5px;font-weight:700;border-radius:999px;padding:1px 6px;}'+
+      '.rflag.match{background:#DCE7F2;color:#1F3A5F;}.rflag.div{background:#F6D9CB;color:#7a2f10;}.rflag.noeng{background:#E3E2E6;color:#5A6675;}'+
+      '.quote{font-size:8px;color:#4F7693;font-style:italic;}'+
+      '.foot{font-size:8px;color:#5A6675;margin-top:6px;}'+
+      '.src{font-size:8.5px;color:#3D454D;font-weight:700;margin-top:2px;}'+
+      '.noprint{position:fixed;top:8px;right:8px;}@media print{.noprint{display:none;}}'+
+      '</style></head><body>'+
+      '<button class="noprint" onclick="window.print()" style="padding:8px 14px;font-weight:700;">Print / Save as PDF</button>'+
+      '<h1>'+escH(CORRIDOR)+' \u2013 Industrial Corridor Screen</h1>'+
+      '<div class="grid"><div class="lbl">'+escH(CORRIDOR)+' Overview'+(aiRead?'<span class="readtag">MODEL-ASSISTED</span>':'')+'</div><div class="bdy">'+escH(read)+'</div></div>'+
+      (comboImg?'<div class="chartwrap"><img src="'+comboImg+'"><div class="legend"><b style="color:#4F7693;">\u25a0</b> Completions&nbsp;&nbsp;<b style="color:#1F3A5F;">\u25a0</b> Net absorption (SF, annual, left axis)&nbsp;&nbsp;<b style="color:#2E86AB;">\u2500</b> Vacancy (right axis)</div></div>':'')+
+      '<table class="stats"><tr><th>'+escH(CORRIDOR)+' Statistics</th>'+stats.slice(1).map(x=>"<th></th>").join("")+'</tr>'+
+      '<tr>'+stats.map(x=>'<td><div style="font-size:8px;font-weight:400;color:#5A6675;">'+x[0]+'</div>'+x[1]+'</td>').join("")+'</tr></table>'+
+      (recon?('<table class="cmp"><tr><th colspan="9">Broker claims vs engine \u2014 verdicts are arithmetic (|claim \u2212 engine| vs fixed thresholds)</th></tr></table>'+recon):
+        (kv.reported_rentg_12mo!=null?('<table class="cmp"><tr><th>Rent growth cross-check</th><th>Engine (inventory-weighted)</th><th>Reported (12 Mo)</th></tr><tr><td>'+escH(CORRIDOR)+'</td><td>'+(M.rent_growth.value??"\u2014")+'%</td><td>'+kv.reported_rentg_12mo+'%</td></tr></table>'):""))+
+      '<div class="foot">MoS rank is against every market in the loaded file on the identical formula. Excess-vacancy model = excess vacancy above each market\u2019s window-average equilibrium plus pipeline, over the window\u2019s absorption pace. Baseline window '+escH(win)+'; definitions in the tool\u2019s Methodology tab. Generated locally in the browser; no data left this machine.</div>'+
+      '<div class="src">Source: sample market data</div>'+
+      '</body></html>';
+    const w=window.open("","_blank");
+    if(!w){$("expStatus").textContent="Pop-up blocked — allow pop-ups for this page and click again.";return;}
+    w.document.write(html); w.document.close();
+    $("expStatus").textContent="One-pager opened in a new tab — use Print / Save as PDF.";
+  }catch(e){$("expStatus").textContent="One-pager build failed: "+e.message;}
+});
+
+$("aiNarrBtn").addEventListener("click",async()=>{
+  if(!LAST){showErr("Run a screen first.");return;}
+  $("aiNarrStatus").textContent="Drafting from computed figures…";
+  const M=LAST.out.metrics, facts={};
+  for(const[k,m]of Object.entries(M)) facts[k]={value:m.value,unit:m.unit};
+  let out;
+  try{
+    const r=await fetch("/api/ai",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({task:"narrative",length:"long",claims:window.LASTRECON||null,corridor:CORRIDOR,window:$("winStart").value+"–"+$("winEnd").value,metrics:facts})});
+    out=await r.json();
+  }catch(e){$("aiNarrStatus").textContent="API unreachable: "+e.message;return;}
+  if(out.configured===false){$("aiNarrStatus").textContent="LLM not configured — template narrative stays in effect (Phase 2 socket).";return;}
+  if(out.error){$("aiNarrStatus").textContent=out.error;return;}
+  $("narrative").textContent=out.narrative+"  ["+out.disclaimer+"]";
+  $("aiNarrStatus").textContent="Model-drafted from the engine's figures only.";
+});
+
+(function(){
+  const tabS=document.getElementById("tabScreen"), tabM=document.getElementById("tabMethod");
+  const mv=document.getElementById("methodView");
+  const tabbar=tabS.closest(".row");
+  const masthead=document.querySelector(".masthead");
+  function mainEls(){
+    return Array.from(document.body.children).filter(el=>
+      el!==mv && el!==tabbar && el!==masthead && el.tagName!=="SCRIPT" && el.tagName!=="NOSCRIPT");
+  }
+  let saved=null;
+  tabM.addEventListener("click",()=>{
+    if(mv.style.display!=="none")return;
+    saved=mainEls().map(el=>[el,el.style.display]);
+    saved.forEach(([el])=>el.style.display="none");
+    mv.style.display="block";
+    tabM.classList.add("on"); tabS.classList.remove("on");
+  });
+  tabS.addEventListener("click",()=>{
+    if(mv.style.display==="none")return;
+    mv.style.display="none";
+    if(saved)saved.forEach(([el,d])=>el.style.display=d);
+    tabS.classList.add("on"); tabM.classList.remove("on");
+  });
+})();
+
+
+
+function seriesAnnual(){
+  const S=seriesForSelection(); const yr={};
+  for(const r of S){
+    const y=r.p.slice(0,4);
+    yr[y]=yr[y]||{del:0,abs:0,vac:null};
+    yr[y].del+=(r.del||0); yr[y].abs+=(r.abs||0); yr[y].vac=r.vacPct; // year-end vacancy
+  }
+  return Object.keys(yr).sort().map(y=>({y,del:yr[y].del,abs:yr[y].abs,vac:yr[y].vac}));
+}
+
+function renderLiveCharts(sel){
+  const wrap=$("liveCharts"); if(!wrap)return;
+  const S=seriesForSelection();
+  const M=LAST&&LAST.out.metrics;
+  if(!M||S.length<4){ wrap.style.display="none"; $("chartsNote").textContent=S.length?"Charts need at least four quarters of history for the selection.":""; return; }
+  wrap.style.display="flex"; $("chartsNote").textContent="Deterministic series for the current selection ("+sel.length+" market(s)) · PNGs export at full resolution.";
+  const A=seriesAnnual();
+  if(A.length>2){OfficeLib.drawChart($("cvVac"),"combo",A.map(r=>r.y),
+    [{name:"Completions",values:A.map(r=>Math.round(r.del)),color:"#4F7693"},
+     {name:"Net absorption",values:A.map(r=>Math.round(r.abs)),color:"#1F3A5F"}],
+    {title:"Completions vs net absorption (annual) · vacancy line — "+CORRIDOR,line:{values:A.map(r=>r.vac),color:"#2E86AB"}});}
+  else OfficeLib.drawChart($("cvVac"),"line",S.map(r=>r.p),[{name:"Vacancy %",values:S.map(r=>r.vacPct),color:"#1F3A5F"}],{title:"Vacancy % — "+CORRIDOR});
+  OfficeLib.drawChart($("cvAbs"),"bar",S.map(r=>r.p),[{name:"Net absorption SF",values:S.map(r=>r.abs),color:"#4F7694"}],{title:"Net absorption SF (qtr)"});
+  OfficeLib.drawChart($("cvMos"),"bar",["Current","Forward"],[{name:"MoS",values:[M.months_of_supply.value||0,M.forward_months_of_supply.value||0],color:"#1F3A5F"}],{title:"Months of supply"});
+}
+document.querySelectorAll(".dlChart").forEach(b=>b.addEventListener("click",()=>{
+  const cv=$(b.dataset.cv);
+  cv.toBlob(blob=>{ if(blob) OfficeLib.download(blob,(CORRIDOR||"corridor").replace(/[^\w\-]+/g,"_")+"_"+b.dataset.name+".png"); },"image/png");
+}));
+
+
+const CHAT=[];
+function chatBubble(role,text){
+  const d=document.createElement("div");
+  d.style.cssText="max-width:82%;padding:9px 12px;border-radius:10px;font-size:13.5px;line-height:1.5;white-space:pre-wrap;"+
+    (role==="user"?"align-self:flex-end;background:var(--tint);color:var(--ink);":"align-self:flex-start;background:#F2F3F5;color:var(--plat);border-left:3px solid var(--ink);");
+  d.textContent=text;
+  $("chatLog").appendChild(d);
+  $("chatLog").scrollTop=$("chatLog").scrollHeight;
+}
+async function chatSend(){
+  const t=$("chatIn").value.trim(); if(!t)return;
+  $("chatIn").value=""; chatBubble("user",t);
+  CHAT.push({role:"user",content:t});
+  while(CHAT.length>12)CHAT.shift();
+  $("chatStatus").textContent="Thinking…"; $("chatSend").disabled=true;
+  try{
+    const body={task:"chat",messages:CHAT,
+      corridor:CORRIDOR,window:$("winStart").value+"–"+$("winEnd").value,
+      metrics:(typeof LAST!=="undefined"&&LAST)?metricsSnapshot():null,
+      claims:window.LASTRECON||null};
+    const r=await fetch("/api/ai",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+    const j=await r.json();
+    if(j.error){chatBubble("assistant","(error: "+j.error+")");}
+    else if(!j.configured){chatBubble("assistant","Corridor Chat is dormant — no LLM endpoint is configured on this deployment.");}
+    else{chatBubble("assistant",j.reply); CHAT.push({role:"assistant",content:j.reply}); while(CHAT.length>12)CHAT.shift();}
+    $("chatStatus").textContent="Model-generated — every figure should trace to the screen; if one doesn’t, trust the screen.";
+  }catch(e){chatBubble("assistant","(API unreachable: "+e.message+")");$("chatStatus").textContent="";}
+  $("chatSend").disabled=false;
+}
+$("chatSend").addEventListener("click",chatSend);
+$("chatIn").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();chatSend();}});
+
+</script>
+</body>
+</html>
