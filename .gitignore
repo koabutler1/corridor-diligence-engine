@@ -1,0 +1,16 @@
+# Never commit real market data
+*.csv
+*.xlsx
+*.xls
+data/
+
+# Secrets and local settings
+.env
+local.settings.json
+
+# Python / OS
+__pycache__/
+*.pyc
+.venv/
+.DS_Store
+Thumbs.db
